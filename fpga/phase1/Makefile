@@ -42,8 +42,8 @@ GHDL_ELAB_FLAGS = -Wl,$(HOME)/tools/glibc-isoc23-shim.o
 
 sim: | build
 	ghdl -a $(GHDL_FLAGS) $(RTL) $(TB_SRC)
-	ghdl -e $(GHDL_FLAGS) $(GHDL_ELAB_FLAGS) $(TB)
-	ghdl -r $(GHDL_FLAGS) $(TB) --wave=build/$(TB).ghw --assert-level=failure
+	ghdl -e $(GHDL_FLAGS) $(GHDL_ELAB_FLAGS) -o build/$(TB) $(TB)
+	./build/$(TB) --wave=build/$(TB).ghw --assert-level=failure
 
 wave: sim
 	gtkwave build/$(TB).ghw &
