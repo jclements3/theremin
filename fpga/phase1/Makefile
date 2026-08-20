@@ -46,7 +46,10 @@ sim: | build
 	ghdl -e $(GHDL_FLAGS) $(GHDL_ELAB_FLAGS) -o build/$(TB) $(TB)
 	./build/$(TB) --wave=build/$(TB).ghw --assert-level=failure
 
-wave: sim
+# Opens the waveform even when the sim fails an assert — that's when you
+# most need it. The '-' keeps make going past sim's nonzero exit.
+wave:
+	-$(MAKE) sim TB=$(TB)
 	gtkwave build/$(TB).ghw &
 
 # ---------- synthesis -> bitstream ----------
