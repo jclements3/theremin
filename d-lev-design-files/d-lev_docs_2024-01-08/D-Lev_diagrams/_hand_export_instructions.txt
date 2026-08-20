@@ -1,0 +1,24 @@
+= How to export Theremin type hand images to draw.io =
+
+0. Open Inkscape.
+1. Pick text tool, font Gallaudet, 144 point.
+2. Click on canvas, type (see below).
+3. Pick main selection tool, click on hand twice to rotate hand.
+4. Path | Object to Path.
+5. Edit | Resize Page to Selection.
+6. Edit | Deselect.
+7. Pick fill tool, pick white at bottom.
+8. Click on all spaces to fill white.
+9. Save as default Inkscape SVG, check fill.
+
+
+'S' for closed hand
+'5' for open hand
+'9' for "OK" hand
+
+
+
+
+
+
+

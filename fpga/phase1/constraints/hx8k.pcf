@@ -1,0 +1,6 @@
+# Lattice iCE40-HX8K-B-EVN breakout (iCE40-HX8K, CT256)
+set_io clk12  J3   # 12 MHz oscillator
+set_io led_hb B5   # D2 (LED bank: B5 B4 A2 A1 C5 C4 B3 C3)
+# audio_out: pick any pin on the J2 header and VERIFY the ball name against
+# the HX8K-B-EVN schematic silk before building — then delete this comment.
+set_io audio_out B1

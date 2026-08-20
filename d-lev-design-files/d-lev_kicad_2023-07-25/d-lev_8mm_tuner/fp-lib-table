@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "d-lev_footprints")(type "KiCad")(uri "/home/demo/Documents/KiCad/D-Lev/v2/d-lev_footprints.pretty")(options "")(descr ""))
+  (lib (name "LED")(type "KiCad")(uri "/home/demo/Documents/KiCad/Libraries/SparkFun-KiCad-Libraries-master/Footprints/LED.pretty")(options "")(descr ""))
+)

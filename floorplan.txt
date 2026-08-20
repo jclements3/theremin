@@ -1,0 +1,17 @@
+                                          20  ft
+                ┌──────────────────────────────────────────────────────────────────────────────────────┐
+                │ ███ ELECTRONICS BENCH (10 ft) ████████████            ┊                              │
+                │ [iron|fume]  [scope|PSU]  [DMM|LCR]  [PC+JTAG]        ┊                              │
+                │  ▲ solder/fume end → vents out yard door              ┊                              │
+                │                                                       ┊  (  OPEN  CALIBRATION  &     │
+         pasture                 ┆                                      ┊     PLAY-TEST  AREA  )       │
+               ⇦                 ┆   ┌───────────────┐                  ┊                              │
+          (walk-   ▢ stool       ┆   │ STORAGE /     │                  ┊  ~6-8 ft clear floor         │
+            out)    walk lane    ┆   │ PARTS SHELVES │                  ┊                              │ 14 ft
+                │ (yard⇄door)    ┆   └───────────────┘                  ┊  keep away from metal,       │
+                │   keep clear   ┆                                      ┊  shelving & your body        │
+                │                ┆   ┌───────────────┐  ┌──────────┐    ┊  during antenna cal          │
+                │                ┆   │ COIL-WIND /   │  │3D PRINTER│    ┊                              │
+                │                ┆   │ MECH-ASSY     │  │ on stand │    ┊                              │
+                │                ┆   └───────────────┘  └──────────┘    ┊                              │
+                └─────────────────┐  ╲ door  ┌───────────────────────────────────────────────────────┘

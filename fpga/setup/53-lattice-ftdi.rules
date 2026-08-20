@@ -1,0 +1,5 @@
+# udev rule: let iceprog access Lattice eval-board FTDI chips without sudo.
+# 0403:6010 = FT2232H (iCEstick, iCE40-HX8K-B-EVN), 0403:6014 = FT232H.
+# Install:  sudo cp 53-lattice-ftdi.rules /etc/udev/rules.d/ && sudo udevadm control --reload
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6010", MODE="0666"
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6014", MODE="0666"

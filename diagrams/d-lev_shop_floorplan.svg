@@ -1,0 +1,91 @@
+<svg viewBox="0 0 760 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scaled basement floor plan for a D-Lev theremin home shop, 20 by 14 feet, showing a 10-foot electronics bench along the top wall, a center island with storage, a coil-winding and assembly bench and a 3D printer, an open calibration and play-test zone on the right, a walk-out door to a pasture on the left wall, the main door on the bottom wall, and a clear walking lane between the two doors.">
+<style>text{font-family:'Helvetica Neue',Arial,sans-serif;}</style>
+<defs>
+<marker id="dim" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#475569" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9 Z" fill="#B45309"/></marker>
+</defs>
+
+<rect x="0" y="0" width="760" height="600" rx="16" fill="#FBFAF7"/>
+<text x="380" y="34" text-anchor="middle" font-size="19" font-weight="600" fill="#1F2430">D-Lev home shop — basement floor plan</text>
+<text x="380" y="52" text-anchor="middle" font-size="11.5" fill="#6B7280">20 × 14 ft · 3D-printed enclosure build · lean fit-out</text>
+
+<!-- room floor + walls -->
+<rect x="80" y="92" width="600" height="420" rx="10" fill="#FFFFFF" stroke="#475569" stroke-width="3"/>
+
+<!-- top dimension: 20 ft -->
+<line x1="80" y1="78" x2="680" y2="78" stroke="#475569" stroke-width="1.3" marker-start="url(#dim)" marker-end="url(#dim)"/>
+<text x="380" y="72" text-anchor="middle" font-size="12" fill="#4B5563">20 ft</text>
+<!-- right dimension: 14 ft -->
+<line x1="700" y1="92" x2="700" y2="512" stroke="#475569" stroke-width="1.3" marker-start="url(#dim)" marker-end="url(#dim)"/>
+<text x="714" y="302" text-anchor="middle" font-size="12" fill="#4B5563" transform="rotate(-90 714 302)">14 ft</text>
+
+<!-- walk lane (kept clear, joins the two doors) -->
+<rect x="92" y="206" width="150" height="300" rx="10" fill="#F59E0B" opacity="0.07"/>
+<rect x="92" y="206" width="150" height="300" rx="10" fill="none" stroke="#D8C6AE" stroke-width="1.5" stroke-dasharray="5 5"/>
+<path d="M90 256 C150 300 200 410 208 500" fill="none" stroke="#B45309" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrow)" opacity="0.8"/>
+<text x="132" y="360" text-anchor="middle" font-size="11" fill="#B45309" transform="rotate(-90 132 360)">walk lane — keep clear</text>
+
+<!-- pasture walk-out door (left wall) -->
+<line x1="80" y1="212" x2="80" y2="302" stroke="#FFFFFF" stroke-width="4"/>
+<path d="M80 212 A90 90 0 0 1 170 302" fill="none" stroke="#9CA3AF" stroke-width="1.2"/>
+<line x1="80" y1="302" x2="170" y2="302" stroke="#9CA3AF" stroke-width="1.6"/>
+<text x="46" y="250" text-anchor="middle" font-size="11.5" font-weight="600" fill="#4B5563" transform="rotate(-90 46 250)">PASTURE</text>
+<text x="62" y="250" text-anchor="middle" font-size="10" fill="#9CA3AF" transform="rotate(-90 62 250)">walk-out door</text>
+
+<!-- main door (bottom wall) -->
+<line x1="170" y1="512" x2="260" y2="512" stroke="#FFFFFF" stroke-width="4"/>
+<path d="M260 512 A90 90 0 0 1 170 422" fill="none" stroke="#9CA3AF" stroke-width="1.2"/>
+<line x1="170" y1="512" x2="170" y2="422" stroke="#9CA3AF" stroke-width="1.6"/>
+<text x="215" y="532" text-anchor="middle" font-size="11" fill="#4B5563">door</text>
+
+<!-- electronics bench (top wall, 10 ft) -->
+<rect x="89" y="101" width="300" height="60" rx="6" fill="#3F4651"/>
+<text x="239" y="127" text-anchor="middle" font-size="13" font-weight="600" fill="#E5E7EB">Electronics bench (10 ft)</text>
+<text x="239" y="145" text-anchor="middle" font-size="10" fill="#CBD5E1">iron · scope · PSU · DMM / LCR · PC + JTAG</text>
+<text x="95" y="178" font-size="9.5" fill="#B45309">▲ solder / fume end → vents out pasture door</text>
+
+<!-- center island: storage -->
+<rect x="260" y="221" width="90" height="60" rx="6" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+<text x="305" y="246" text-anchor="middle" font-size="11" fill="#1F2430">Storage /</text>
+<text x="305" y="262" text-anchor="middle" font-size="11" fill="#1F2430">parts shelves</text>
+
+<!-- center island: coil / assembly bench -->
+<rect x="260" y="347" width="90" height="60" rx="6" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+<text x="305" y="372" text-anchor="middle" font-size="11" fill="#1F2430">Coil-wind /</text>
+<text x="305" y="388" text-anchor="middle" font-size="11" fill="#1F2430">mech assembly</text>
+
+<!-- center island: 3D printer -->
+<rect x="380" y="347" width="74" height="60" rx="6" fill="#FFFFFF" stroke="#475569" stroke-width="1.5"/>
+<text x="417" y="372" text-anchor="middle" font-size="11" fill="#1F2430">3D printer</text>
+<text x="417" y="388" text-anchor="middle" font-size="9.5" fill="#6B7280">(on stand)</text>
+
+<!-- stool -->
+<circle cx="360" cy="312" r="9" fill="#D8C6AE" stroke="#B45309" stroke-width="1.2"/>
+<text x="360" y="335" text-anchor="middle" font-size="9" fill="#9CA3AF">stool</text>
+
+<!-- open calibration / play-test zone (right third) -->
+<rect x="476" y="110" width="192" height="392" rx="10" fill="#EDE9FE" opacity="0.45"/>
+<rect x="476" y="110" width="192" height="392" rx="10" fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text x="572" y="146" text-anchor="middle" font-size="12.5" font-weight="600" fill="#5B21B6">OPEN CALIBRATION</text>
+<text x="572" y="163" text-anchor="middle" font-size="12.5" font-weight="600" fill="#5B21B6">&amp; PLAY-TEST AREA</text>
+<text x="572" y="184" text-anchor="middle" font-size="10.5" fill="#6B7280">≥ 6–8 ft clear floor</text>
+
+<!-- mini theremin + clearance ring -->
+<circle cx="572" cy="335" r="62" fill="none" stroke="#7C3AED" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.6"/>
+<line x1="560" y1="300" x2="558" y2="305" stroke="#F59E0B" stroke-width="1.2" opacity="0.6"/>
+<rect x="552" y="350" width="40" height="14" rx="3" fill="#3F4651"/>
+<line x1="562" y1="350" x2="562" y2="288" stroke="#6B7280" stroke-width="3" stroke-linecap="round"/>
+<circle cx="562" cy="287" r="4" fill="#6B7280"/>
+<line x1="592" y1="318" x2="612" y2="318" stroke="#F59E0B" stroke-width="1.2" opacity="0.6"/>
+<line x1="592" y1="328" x2="612" y2="328" stroke="#F59E0B" stroke-width="1.2" opacity="0.6"/>
+<line x1="592" y1="338" x2="612" y2="338" stroke="#F59E0B" stroke-width="1.2" opacity="0.6"/>
+<text x="572" y="478" text-anchor="middle" font-size="10" fill="#6B7280">no metal / shelving / body</text>
+<text x="572" y="492" text-anchor="middle" font-size="10" fill="#6B7280">near antennas during cal</text>
+
+<!-- scale bar + caption -->
+<line x1="80" y1="548" x2="230" y2="548" stroke="#475569" stroke-width="1.5"/>
+<line x1="80" y1="544" x2="80" y2="552" stroke="#475569" stroke-width="1.5"/>
+<line x1="230" y1="544" x2="230" y2="552" stroke="#475569" stroke-width="1.5"/>
+<text x="155" y="565" text-anchor="middle" font-size="10" fill="#4B5563">5 ft</text>
+<text x="680" y="565" text-anchor="end" font-size="10" fill="#9CA3AF">drawn to scale · 30 px = 1 ft</text>
+</svg>

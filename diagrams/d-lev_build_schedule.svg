@@ -1,0 +1,104 @@
+<svg viewBox="0 0 980 770" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gantt schedule to build the shop and the D-Lev theremin part-time over about 14 weeks.">
+<style>text{font-family:'Helvetica Neue',Arial,sans-serif;}</style>
+<defs><pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#E2E8F0"/><line x1="0" y1="0" x2="0" y2="6" stroke="#94A3B8" stroke-width="2"/></pattern></defs>
+<rect x="0" y="0" width="980" height="770" rx="16" fill="#FBFAF7"/>
+<text x="490.0" y="36" text-anchor="middle" font-size="19" font-weight="600" fill="#1F2430">D-Lev — shop &amp; build schedule</text>
+<text x="490.0" y="56" text-anchor="middle" font-size="11.5" fill="#6B7280">Part-time: ~3 weeknights (×2.5 h) + Saturday (~6 h) ≈ 12–14 h/week · ~3 months</text>
+<text x="416.0" y="78" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="monospace" letter-spacing="1">Month 1</text>
+<rect x="502" y="82" width="172" height="622" fill="#000000" opacity="0.025"/>
+<text x="588.0" y="78" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="monospace" letter-spacing="1">Month 2</text>
+<text x="760.0" y="78" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="monospace" letter-spacing="1">Month 3</text>
+<rect x="846" y="82" width="86" height="622" fill="#000000" opacity="0.025"/>
+<text x="889.0" y="78" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="monospace" letter-spacing="1">Month 4</text>
+<line x1="330" y1="96" x2="330" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="373" y1="96" x2="373" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="416" y1="96" x2="416" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="459" y1="96" x2="459" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="502" y1="96" x2="502" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="545" y1="96" x2="545" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="588" y1="96" x2="588" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="631" y1="96" x2="631" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="674" y1="96" x2="674" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="717" y1="96" x2="717" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="760" y1="96" x2="760" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="803" y1="96" x2="803" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="846" y1="96" x2="846" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="889" y1="96" x2="889" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<line x1="932" y1="96" x2="932" y2="704" stroke="#E5E7EB" stroke-width="1"/>
+<text x="351.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">1</text>
+<text x="394.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">2</text>
+<text x="437.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">3</text>
+<text x="480.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">4</text>
+<text x="523.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">5</text>
+<text x="566.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">6</text>
+<text x="609.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">7</text>
+<text x="652.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">8</text>
+<text x="695.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">9</text>
+<text x="738.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">10</text>
+<text x="781.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">11</text>
+<text x="824.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">12</text>
+<text x="867.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">13</text>
+<text x="910.5" y="92" text-anchor="middle" font-size="9.5" fill="#94A3B8" font-family="monospace">14</text>
+<text x="16" y="92" font-size="9.5" fill="#94A3B8" font-family="monospace" letter-spacing="1">WEEK →</text>
+<rect x="12" y="107" width="956" height="20" rx="5" fill="#1F2430"/>
+<text x="22" y="120.0" font-size="11.5" font-weight="600" fill="#F3F4F6" letter-spacing="0.5">PROCUREMENT — kick off first; it ships while you build</text>
+<text x="300" y="144.0" text-anchor="end" font-size="12" fill="#334155">Order PCBs → JLCPCB (gerbers)</text>
+<rect x="332" y="134" width="39" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="168.0" text-anchor="end" font-size="12" fill="#334155">Order parts (full BOM)</text>
+<rect x="332" y="158" width="39" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="192.0" text-anchor="end" font-size="12" fill="#334155">Order tools · 3D printer · bench lumber</text>
+<rect x="332" y="182" width="82" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="216.0" text-anchor="end" font-size="12" fill="#334155">Fab + shipping lead time</text>
+<rect x="332" y="206" width="125" height="12" rx="3" fill="url(#hatch)" stroke="#94A3B8" stroke-width="0.8"/>
+<text x="465" y="215.0" font-size="9.5" fill="#94A3B8" font-style="italic">~2–3 wks lead</text>
+<path d="M459 229.0 L466 236.0 L459 243.0 L452 236.0 Z" fill="#0EA5A5" stroke="#0F766E" stroke-width="1"/>
+<text x="471" y="240.0" font-size="11" font-weight="600" fill="#0F766E">PCBs &amp; parts arrive</text>
+<rect x="12" y="251" width="956" height="20" rx="5" fill="#1F2430"/>
+<text x="22" y="264.0" font-size="11.5" font-weight="600" fill="#F3F4F6" letter-spacing="0.5">SHOP BUILD</text>
+<text x="300" y="288.0" text-anchor="end" font-size="12" fill="#334155">Clear basement · mark zones</text>
+<rect x="332" y="278" width="82" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="312.0" text-anchor="end" font-size="12" fill="#334155">Weatherstrip pasture door · boot mat</text>
+<rect x="375" y="302" width="39" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="336.0" text-anchor="end" font-size="12" fill="#334155">Build 2 workbenches (DIY)</text>
+<rect x="375" y="326" width="125" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="360.0" text-anchor="end" font-size="12" fill="#334155">Task lighting · dehumidifier</text>
+<rect x="418" y="350" width="39" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="384.0" text-anchor="end" font-size="12" fill="#334155">Shelving · parts bins · ESD mat</text>
+<rect x="418" y="374" width="82" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="408.0" text-anchor="end" font-size="12" fill="#334155">Set up + test 3D printer</text>
+<rect x="461" y="398" width="39" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<text x="300" y="432.0" text-anchor="end" font-size="12" fill="#334155">Electronics bench · fume vent to door</text>
+<rect x="461" y="422" width="82" height="12" rx="3" fill="#F59E0B" opacity="0.92"/>
+<path d="M545 445.0 L552 452.0 L545 459.0 L538 452.0 Z" fill="#0EA5A5" stroke="#0F766E" stroke-width="1"/>
+<text x="557" y="456.0" font-size="11" font-weight="600" fill="#0F766E">Shop operational</text>
+<rect x="12" y="467" width="956" height="20" rx="5" fill="#1F2430"/>
+<text x="22" y="480.0" font-size="11.5" font-weight="600" fill="#F3F4F6" letter-spacing="0.5">THEREMIN BUILD</text>
+<text x="300" y="504.0" text-anchor="end" font-size="12" fill="#334155">Solder boards (main·AFE·enc·tuner)</text>
+<rect x="504" y="494" width="168" height="12" rx="3" fill="#7C3AED" opacity="0.92"/>
+<text x="300" y="528.0" text-anchor="end" font-size="12" fill="#334155">Print enclosure parts (PETG)</text>
+<rect x="504" y="518" width="125" height="12" rx="3" fill="#7C3AED" opacity="0.92"/>
+<text x="300" y="552.0" text-anchor="end" font-size="12" fill="#334155">Flash FPGA (Quartus + USB-Blaster)</text>
+<rect x="633" y="542" width="39" height="12" rx="3" fill="#7C3AED" opacity="0.92"/>
+<text x="300" y="576.0" text-anchor="end" font-size="12" fill="#334155">Wind &amp; tune antenna coils (tcoil+LCR)</text>
+<rect x="633" y="566" width="82" height="12" rx="3" fill="#7C3AED" opacity="0.92"/>
+<text x="300" y="600.0" text-anchor="end" font-size="12" fill="#334155">Final assembly + wiring</text>
+<rect x="676" y="590" width="82" height="12" rx="3" fill="#7C3AED" opacity="0.92"/>
+<text x="300" y="624.0" text-anchor="end" font-size="12" fill="#334155">Calibration (manual procedures)</text>
+<rect x="719" y="614" width="82" height="12" rx="3" fill="#7C3AED" opacity="0.92"/>
+<text x="300" y="648.0" text-anchor="end" font-size="12" fill="#334155">Buffer / debugging</text>
+<rect x="762" y="638" width="125" height="12" rx="3" fill="#E2553A" opacity="0.92"/>
+<text x="300" y="672.0" text-anchor="end" font-size="12" fill="#334155">Play-test + dial in presets</text>
+<rect x="805" y="662" width="82" height="12" rx="3" fill="#7C3AED" opacity="0.92"/>
+<path d="M889 685.0 L896 692.0 L889 699.0 L882 692.0 Z" fill="#0EA5A5" stroke="#0F766E" stroke-width="1"/>
+<text x="901" y="696.0" font-size="11" font-weight="600" fill="#0F766E">First sound 🎵</text>
+<rect x="20" y="724" width="16" height="11" rx="2" fill="#F59E0B"/>
+<text x="42" y="734" font-size="11" fill="#4B5563">Shop build</text>
+<rect x="148" y="724" width="16" height="11" rx="2" fill="#7C3AED"/>
+<text x="170" y="734" font-size="11" fill="#4B5563">Theremin build</text>
+<rect x="304" y="724" width="16" height="11" rx="2" fill="#E2553A"/>
+<text x="326" y="734" font-size="11" fill="#4B5563">Buffer / debugging</text>
+<rect x="488" y="724" width="16" height="11" rx="2" fill="url(#hatch)"/>
+<text x="510" y="734" font-size="11" fill="#4B5563">Lead time (waiting)</text>
+<path d="M656 725 L663 731 L656 737 L649 731 Z" fill="#0EA5A5"/>
+<text x="670" y="734" font-size="11" fill="#4B5563">Milestone</text>
+</svg>

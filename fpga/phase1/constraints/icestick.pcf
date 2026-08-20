@@ -1,0 +1,4 @@
+# Lattice iCEstick (iCE40-HX1K, TQ144)
+set_io clk12     21   # 12 MHz FTDI-derived oscillator
+set_io led_hb    99   # D1 (red)
+set_io audio_out 78   # PMOD J2 pin 1 — series 1k -> piezo -> GND

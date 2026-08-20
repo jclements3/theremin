@@ -1,0 +1,5 @@
+# Generated build artifacts (ghdl/yosys/nextpnr outputs, waveforms)
+fpga/*/build/
+*.ghw
+*.o
+work-obj*.cf
