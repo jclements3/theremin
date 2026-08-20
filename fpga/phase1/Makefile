@@ -10,12 +10,13 @@
 #
 #   make BOARD=hx8k bit    for the iCE40-HX8K-B-EVN (default: icestick)
 
+# TB selects which testbench to run: make sim TB=scale_seq_tb
 BOARD ?= icestick
 TOP    = top
-TB     = nco_tb
+TB    ?= nco_tb
 
-RTL    = rtl/nco.vhd rtl/top.vhd
-TB_SRC = tb/nco_tb.vhd
+RTL    = rtl/nco.vhd rtl/scale_seq.vhd rtl/top.vhd
+TB_SRC = tb/nco_tb.vhd tb/scale_seq_tb.vhd
 
 ifeq ($(BOARD),icestick)
   DEVICE  = hx1k
