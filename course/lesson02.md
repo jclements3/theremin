@@ -1,6 +1,6 @@
 # Lesson 02 — Testbenches That Check Themselves
 
-*Where we are.* In lesson01 you wrote your first real hardware — a registered
+*Where we are.* In lesson 01 you wrote your first real hardware — a registered
 mux — and ran it against a testbench that was handed to you. This lesson
 makes you the author of that machinery. You'll build an 8-bit counter (the
 counting idiom behind the NCO's phase accumulator, the frequency meter, and
@@ -21,9 +21,13 @@ GTKWave, the oscilloscope of this course.
 - Diagnose a deliberately seeded bug twice: once from the console FAIL lines,
   once from the waveform.
 
-## Concepts
+---
 
-### A testbench is a lab bench
+## Session 02.1 — Anatomy of a Self-Checking Testbench (~60 min)
+
+### Concepts
+
+#### A testbench is a lab bench
 
 A testbench is a VHDL entity with **no ports**. Nothing outside the simulator
 ever connects to it — it is the closed room in which the device under test
@@ -45,7 +49,7 @@ The clock generator is the signal generator, the stimulus process is your
 hands on the switches, and the asserts are the lab notebook — except this
 notebook slaps you when a reading is wrong.
 
-### Generating a clock (and stopping it)
+#### Generating a clock (and stopping it)
 
 One line makes a clock:
 
@@ -68,12 +72,12 @@ the house pattern for every testbench in the course (compare
 `fpga/phase1/tb/nco_tb.vhd` — same line, verbatim).
 
 `CLK_PER` is 83.333 ns — 12 MHz, the iCEstick's oscillator. We simulate at
-the target clock rate from day one so timestamps in lesson02 mean the same
-thing they'll mean in lesson14.
+the target clock rate from day one so timestamps in lesson 02 mean the same
+thing they'll mean in lesson 14.
 
-### Sampling after the edge: the `wait for 1 ns` idiom
+#### Sampling after the edge: the `wait for 1 ns` idiom
 
-Recall from lesson01 that a signal assignment inside a clocked process takes
+Recall from lesson 01 that a signal assignment inside a clocked process takes
 effect one delta cycle *after* the edge. So if your testbench does
 
 ```vhdl
@@ -94,7 +98,7 @@ assert count = i ...
 One nanosecond is far past any delta-cycle activity and far short of the
 next edge (41.7 ns away): you sample the settled post-edge world.
 
-### The assert / report / severity ladder
+#### The assert / report / severity ladder
 
 The full form of the checking statement:
 
@@ -137,7 +141,7 @@ numeric_std. Put the *expected* and the *observed* value in every FAIL
 message — a report that says "R1 FAIL" without numbers is a mystery novel
 with the last page torn out.
 
-### Requirement tags: DO-254 with the paperwork shrunk to comments
+#### Requirement tags: DO-254 with the paperwork shrunk to comments
 
 Certification-grade hardware (DO-254 is the airborne-electronics standard)
 lives and dies by **traceability**: every requirement maps to design elements
@@ -159,7 +163,7 @@ silent testbench might mean "all good" or might mean "my checks never ran."
 Printing positive evidence closes that hole. (It has one trap, which the
 break-it exercise in Explore will spring on you.)
 
-### GTKWave: when the console isn't enough
+#### GTKWave: when the console isn't enough
 
 Asserts tell you *that* something is wrong; waveforms show you *what
 happened around it*. GHDL dumps its native GHW format:
@@ -196,14 +200,14 @@ Optional aside: the OSS CAD Suite also ships **surfer**, a newer viewer
 (`surfer build/count8.ghw`) — same ideas, different ergonomics; the course
 standardizes on GTKWave, but nothing stops you.
 
-### The DUT: an 8-bit counter with enable
+#### The DUT: an 8-bit counter with enable
 
 The counter itself is four requirements and one process — read the header
 of `count8.vhd` in Build first, then the process. Two design points:
 
 - **Wrapping is specified, not accidental.** `cnt + 1` on an
   `unsigned(7 downto 0)` is mod-256 by the definition of numeric_std
-  arithmetic. Here that's requirement R2, on purpose — the NCO in lesson04
+  arithmetic. Here that's requirement R2, on purpose — the NCO in lesson 04
   is *built* on exactly this wrap. Lesson03 covers the cases where wrap is
   the bug and saturation is the spec.
 - **`en` is a clock enable, not a gated clock.** The clock reaches the
@@ -213,7 +217,7 @@ of `count8.vhd` in Build first, then the process. Two design points:
   you a lecture from nextpnr. The `rst > en` priority inside one clocked
   process is the house pattern for every sequential block to come.
 
-## Radar Connection
+### Radar Connection
 
 DO-254 exists because avionics — radar signal processors very much included
 — must arrive with *evidence*, not vibes. When a radar board is certified,
@@ -228,12 +232,28 @@ The deeper habit this builds: **self-checking beats eyeballing, at scale.**
 A radar signal chain has dozens of blocks and thousands of regression runs;
 no human re-inspects waveforms after every change. Waveforms are for
 *diagnosis* — asserts are for *verdicts*. Write the requirement once, encode
-the check once, and every `make sim` re-testifies. When lesson10's frequency
-meter feeds lesson13's pitch mapper and something warbles, you'll re-run
+the check once, and every `make sim` re-testifies. When lesson 10's frequency
+meter feeds lesson 13's pitch mapper and something warbles, you'll re-run
 every TB in the chain in seconds and know exactly which requirement broke —
 the same triage a radar integration lab does when the range display lies.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why a bare `clk <= not clk after ...` keeps a simulation running forever,
+  and how setting `done` lets the event queue drain so GHDL exits on its own.
+- why an assert placed immediately after `wait until rising_edge(clk)` reads
+  the pre-edge value, and what `wait for 1 ns` buys you.
+- which severities halt the run under `--assert-level=failure`, and why a
+  printed `R3 pass:` line is evidence the check *executed*, not merely that
+  nothing failed.
+- why `en` selects the flip-flop's D input instead of gating the clock, and
+  why the 255 → 0 wrap is a requirement here rather than a bug.
+
+---
+
+## Session 02.2 — Build & Run (~75 min)
+
+### Build
 
 Create `course/work/lesson02/` and the three files below. Type them — the
 finger-memory for the assert idiom is the point of the lesson. (Solutions
@@ -429,7 +449,7 @@ stop only for catastrophe" policy from Concepts.
 **File: course/work/lesson02/Makefile**
 
 ```make
-# Lesson 02 solution — GHDL sim flow. Usage: make sim  (after sourcing
+# Lesson 02 — GHDL sim flow. Usage: make sim  (after sourcing
 # ~/tools/oss-cad-suite/environment). Mirrors tutorial/Makefile — same
 # flags, same shim, no synthesis targets.
 
@@ -452,7 +472,7 @@ clean:
 	rm -rf build
 ```
 
-## Run
+### Run
 
 Activate the toolchain and run the sim (cwd = `course/work/lesson02/`):
 
@@ -519,7 +539,23 @@ mid-count reset. Zoom into the first staircase until clock edges are visible
 and watch `count` step *only* on rising edges with `en` high. That picture
 is R1, R3, and R4 — the asserts just say it in text.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why your log's timestamps match the expected output digit-for-digit — the
+  sim is deterministic, and the femtosecond digits come from 83.333 ns not
+  dividing evenly.
+- what each field of a line like `count8_tb.vhd:52:5:@125999500fs:(report
+  note)` tells you, and how that prefix lets Emacs jump to the source line.
+- why GHW lets GTKWave render `count` as a decimal bus while a re-run's new
+  dump only appears after `File → Reload Waveform`.
+- how the wave picture — reset window, staircase, shelf, ramp-and-wrap,
+  mid-count reset — is the same evidence the R1–R4 asserts state in text.
+
+---
+
+## Session 02.3 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Solutions are in `course/solutions/lesson02/` — attempt these first.
 
@@ -533,7 +569,7 @@ Solutions are in `course/solutions/lesson02/` — attempt these first.
    (b) Find the exact moment `count` goes 255 → 0 and read the marker time.
    It should sit just before the `R2 pass` line's `@21959245500fs`. While
    zoomed there, unfold `count`'s bits: at the wrap, all eight flip at once
-   — in lesson04 those upper bits become the NCO's output square waves.
+   — in lesson 04 those upper bits become the NCO's output square waves.
 2. **Break it on purpose.** In `count8.vhd`, change `cnt <= cnt + 1;` to
    `cnt <= cnt + 2;` and `make sim`. Predict the output before running.
    Four things to observe, two of them traps: the R1 asserts print ten
@@ -564,14 +600,14 @@ Solutions are in `course/solutions/lesson02/` — attempt these first.
    change should be needed — a new requirement doesn't always mean new
    hardware, but it always means a new check.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs: let the compile buffer drive GTKWave-free debugging.** GHDL's
   runtime assert messages carry the same `file:line:col` prefix as its
   compile errors, so if you run the sim with `<f6>` (M-x compile → `make
   sim`), `M-g n` jumps your cursor from FAIL line to FAIL line *into the
   testbench source* at the assert that fired. Fix, `<f6>`, repeat — the
-  red/green loop from lesson00 works for simulation failures too.
+  red/green loop from lesson 00 works for simulation failures too.
 - **Toolchain gotcha: `make sim` "succeeds" with errors in the log.** With
   `--assert-level=failure`, GHDL exits 0 even when `error`-severity asserts
   fired — only a `failure` (or a crash) makes the exit code nonzero. So
@@ -591,9 +627,9 @@ Solutions are in `course/solutions/lesson02/` — attempt these first.
   Decimal (per-signal). Ten minutes of confusion about why the counter
   "jumps from 9 to A" is a rite of passage you are hereby spared.
 
-## Checkpoint
+### Checkpoint
 
-Before lesson03, all of the following are true:
+Before lesson 03, all of the following are true:
 
 - `make sim` in `course/work/lesson02/` prints the five `pass` lines and the
   `count8 testbench complete: R1-R4 checked` line, with no `FAIL` anywhere

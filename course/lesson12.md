@@ -14,7 +14,11 @@ which you could hear, you will be looking at the front end of every radio
 receiver and every CW radar ever built — and at the argument, made
 precise, that a theremin *is* one.
 
-## Objectives
+---
+
+## Session 12.1 — Multiplication Moves Frequencies (~90 min)
+
+### Objectives
 
 - Derive, from the product-of-cosines identity, why multiplying two tones
   produces exactly a sum frequency and a difference frequency, and why
@@ -30,9 +34,9 @@ precise, that a theremin *is* one.
 - Build `het_mixer` and verify both of its personalities: beat-frequency
   generator (offset inputs) and phase detector (equal inputs).
 
-## Concepts
+### Concepts
 
-### The problem mixing solves
+#### The problem mixing solves
 
 The hand's information is a frequency deviation: the antenna oscillator
 sits near 200 kHz and the hand pulls it by a couple of percent at most —
@@ -71,7 +75,7 @@ generate products at f₁±f₂ (and worse). Multiplication is the clean ideal
 that makes only the two you asked for; real mixer design is the art of
 approximating it.
 
-### XOR is a multiplier — exactly
+#### XOR is a multiplier — exactly
 
 We have no analog multiplier on an iCE40, and we don't need one. Our
 oscillators are the NCOs' square-wave outputs — one bit each — and for
@@ -128,7 +132,7 @@ scope: our beat will be a triangle, not a sine — and it hands you the
 filter design for free, because *duty cycle over a window* is something a
 counter can measure.
 
-### Accumulate-and-dump: a low-pass filter you already know how to build
+#### Accumulate-and-dump: a low-pass filter you already know how to build
 
 The low-pass that keeps 440 Hz and crushes 200 kHz could be an RC on a
 pin — that's lesson 08's trick, and Theremin's. Digitally we do something
@@ -180,7 +184,7 @@ R1 measures that with a hysteresis detector — arm below ¼ scale, fire at
 single threshold without hysteresis would chatter on the quantization
 fuzz riding the ramps.
 
-### Two frequencies make a beat; one frequency makes a phase detector
+#### Two frequencies make a beat; one frequency makes a phase detector
 
 Set FCW_LO = FCW_RF and the phase offset stops slewing: the XOR duty
 cycle freezes at 2φ and `if_out` goes DC, proportional to the phase
@@ -196,7 +200,7 @@ theremin's null — hand at rest, both oscillators tuned identical, beat
 frequency zero, silence. The handoff documents in this repository spend
 pages on that null; you have now built the circuit that defines it.
 
-### The image problem: the mixer can't tell up from down
+#### The image problem: the mixer can't tell up from down
 
 Look once more at the identity. The difference term is cos(2π(f₁−f₂)t),
 and cosine is *even*: cos(−x) = cos(x). An RF at 440 Hz *below* the LO
@@ -226,7 +230,7 @@ Players know this failure mode; now you know its name. For radar it is
 much worse than a tuning quirk, and it is where the Radar Connection
 must pick up the story.
 
-## Radar Connection
+### Radar Connection
 
 Put the two block diagrams side by side and stop being polite about it:
 
@@ -290,7 +294,26 @@ theremin never bothers — the player's ear closes the loop, and proper
 tuning keeps the hand on one side of the null — but when the HB100 shows
 up with *its* two output pins, you'll know why there are two.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why multiplying two tones produces exactly a sum frequency and a
+  difference frequency, and why the difference term carries the hand's
+  detuning into the audible band with the carrier cancelled out.
+- why XOR on two square waves is a true ±1 multiplication rather than an
+  analogy, and why the leftover global sign only flips the DC sense of
+  the output.
+- why a 1024-clock accumulate-and-dump passes the 440 Hz difference at
+  ~0.998 gain but bounds the ~200 kHz sum below about −35 dB, and why
+  its nulls land exactly on the frequencies that would alias onto DC
+  after decimation.
+- what quantity the mixer's |f_rf − f_lo| output destroys, and how mixing
+  against two LOs 90° apart recovers it.
+
+---
+
+## Session 12.2 — Build & Run (~90 min)
+
+### Build
 
 Three files plus the Makefile. `nco.vhd` is lesson 04's file, reused
 verbatim — copy your lesson 04 copy rather than retyping it; it must be
@@ -724,7 +747,7 @@ Dissection:
 **File: course/work/lesson12/Makefile**
 
 ```make
-# Lesson 12 solutions — het_mixer (the heterodyne heart). Usage: make sim
+# Lesson 12 — het_mixer (the heterodyne heart). Usage: make sim
 # (after sourcing ~/tools/oss-cad-suite/environment). Mirrors
 # tutorial/Makefile — same flags, same shim. No synthesis targets:
 # het_mixer is the standalone physics-authentic path; theremin_top
@@ -755,7 +778,7 @@ synthesizable, but `het_mixer` is the standalone physics-authentic path,
 and `theremin_top` (lesson 14) uses the measurement path instead. `SRC`
 order is load-bearing as always: the TB instantiates both other files.
 
-## Run
+### Run
 
 From `course/work/lesson12/` (with the toolchain environment sourced —
 the `fpga` alias from lesson 00 does this):
@@ -795,7 +818,25 @@ het_mixer_tb.vhd:201:5:@29184341595500fs:(report note): het_mixer testbench comp
   85.3 µs. In that time roughly 2 400 cycles of 100 kHz RF got folded
   down to ten and a half cycles of concert A.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why `if_out` needs ACC_LOG2 + 1 bits, and what silently happens to the
+  beat's peaks if it is declared one bit narrow.
+- why the publish on the window's last cycle adds the final clock's
+  contribution (`acc + 1` when `mix = '1'`), so every one of the 1024
+  clocks is counted exactly once.
+- why R1 measures the beat with hysteresis threshold crossings averaged
+  over ten periods rather than comparing samples against a triangle
+  template, and why R2's 15-clock reset stagger predicts a DC level of
+  exactly 256 counts.
+- why `BEAT_DUMPS` is computed live from the fcw constants instead of
+  frozen as 26.63, and what that buys the Explore edits.
+
+---
+
+## Session 12.3 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Attempt these before peeking at `course/solutions/lesson12/`.
 
@@ -819,7 +860,10 @@ Attempt these before peeking at `course/solutions/lesson12/`.
    barely one. Lesson 10's law again, wearing mixer clothes: resolving a
    small frequency difference costs observation time, T ≈ 1/Δf, in a
    counter, a mixer, or a radar dwell. Widen the R1 loop from 280 to
-   1120 dumps and it passes: ~213.25 dumps/beat, ~55.0 Hz. Restore both.
+   1120 dumps and it passes: ~213.25 dumps/beat measured vs
+   2³²/(19 685 · 1024) = 213.07 predicted from the fcw difference — the
+   same crossing-quantization residual as the main run's R1 — ~55.0 Hz
+   either way. Restore both.
 3. **Break it: the wrong sign.** Change `mix <= rf_in xor lo_in;` to
    `xnor`. R1 still passes — the beat envelope inverts top-for-bottom,
    but an inverted triangle still crosses the hysteresis thresholds at
@@ -841,7 +885,7 @@ Attempt these before peeking at `course/solutions/lesson12/`.
    zero-evidence cases — this one crashed usefully only because
    `natural` bounds-checks. Restore 10.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs / vhdl-mode:** the TB instantiates `nco` twice. Write `nco_rf`
   (or port-copy/paste it with `C-c C-p C-w` / `C-c C-p C-i` as in lesson
@@ -877,7 +921,7 @@ Attempt these before peeking at `course/solutions/lesson12/`.
   expectation. (It failed usefully precisely because the prediction was
   live and signed.)
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 13 you must have:
 

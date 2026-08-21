@@ -10,7 +10,11 @@ sine LUT (lesson 07), the delta-sigma DAC (lesson 08), the pitch mapper
 this code in `fpga/phase1`, treat it as new anyway: this time we derive
 every line, and the derivations are what the rest of the course reuses.
 
-## Objectives
+---
+
+## Session 04.1 — The Phase Accumulator (~60 min)
+
+### Objectives
 
 - Derive `f_out = fcw * f_clk / 2**W` from the geometry of a wrapping
   accumulator, with no hand-waving.
@@ -23,9 +27,9 @@ every line, and the derivations are what the rest of the course reuses.
 - Read every line of `nco.vhd` and `nco_tb.vhd` and explain what it does
   and why it is written that way.
 
-## Concepts
+### Concepts
 
-### A number on a circle
+#### A number on a circle
 
 Forget hardware for a moment. Phase is an angle: a point on a circle,
 running from 0 to 2π and wrapping. An oscillator is nothing but a phase
@@ -47,7 +51,7 @@ acc <= acc + fcw;   -- mod 2**W, courtesy of numeric_std unsigned
 `fcw` is the **frequency control word**: the number of phase ticks to
 advance per clock. That's the entire oscillator. Three signals, one adder.
 
-### Deriving f_out
+#### Deriving f_out
 
 Per clock cycle, the phase advances by `fcw` ticks out of 2^W per full
 circle. So it completes
@@ -80,7 +84,7 @@ lesson 13, where that deliberate offset is priced in the open (it's four
 orders of magnitude below a semitone). Hold that number: now you know
 where it comes from, to the half-count.
 
-### Frequency resolution
+#### Frequency resolution
 
 The smallest frequency step is one LSB of fcw:
 
@@ -99,7 +103,7 @@ years uses a phase accumulator.
 The price of the fine grid: the *period* is generally not an integer number
 of clocks, which brings us to jitter.
 
-### Phase truncation jitter
+#### Phase truncation jitter
 
 The square output is just the MSB of the accumulator — high while the phase
 is in the top half of the circle, low in the bottom half. That's a ~50%
@@ -122,7 +126,7 @@ we tap the top 10 bits of this accumulator to address a sine table in
 lesson 07, the truncation from 32 bits to 10 sets the spur floor of the
 synthesized sine. Same mechanism, and we'll size it then.
 
-### The ±1 edge-count property (why the TB is honest)
+#### The ±1 edge-count property (why the TB is honest)
 
 How do you *verify* a frequency in a testbench? Amateurs dump a waveform
 and eyeball it. The professional move is to find a property that must hold
@@ -156,7 +160,7 @@ propagated, so it effectively observes a window shifted by one clock.
 Shifting a K-clock window moves at most one threshold in or out — still
 within the ±1.
 
-### Nyquist and the corners
+#### Nyquist and the corners
 
 fcw = 2^(W-1) is the Nyquist corner: half a circle per clock, MSB toggling
 every clock, f_out = f_clk/2. Push fcw above that and the output *aliases*
@@ -165,7 +169,7 @@ image frequency instead (you'll do this to yourself, on purpose, in
 Explore). At the other end, fcw = 1 is the slowest note: one wrap per 2^W
 clocks. The testbench visits both ends.
 
-## Radar Connection
+### Radar Connection
 
 The NCO's datasheet name is **DDS** — direct digital synthesis — and it is
 the beating heart of every modern radar exciter.
@@ -197,7 +201,23 @@ the beating heart of every modern radar exciter.
 The theremin is using the DDS as its *voice*. A radar uses it as its
 *ruler*. Same module.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why a W-bit wrapping unsigned adder is an exact model of phase on a
+  circle, and how f_out = fcw·f_clk/2^W follows from "cycles per clock,
+  times clocks per second".
+- why the NCO's frequency grid is uniform at Δf = f_clk/2^W while a
+  divide-by-N counter's steps are neither uniform nor fine.
+- why each output edge can be early or late by up to one clock period yet
+  the error never accumulates.
+- why, over any window of K clocks, the observed rising-edge count must
+  land within ±1 of K·fcw/2^W — for any fcw and any starting phase.
+
+---
+
+## Session 04.2 — Dissecting the Code (~75 min)
+
+### Build
 
 Three files. The code below is the reference implementation — the same
 `nco.vhd` that ships in `fpga/phase1/rtl/` and will be instantiated
@@ -526,7 +546,22 @@ not); and `--assert-level=failure` halts only on severity `failure`, so
 our `error`-severity asserts print and *keep going* — one run reports the
 verdict on every requirement instead of dying at the first.
 
-## Run
+**Stopping point.** You should now be able to explain:
+
+- why `fcw` is a port rather than a generic, and which part of the
+  finished instrument depends on rewriting it while the oscillator runs.
+- why `en` is a synchronous clock enable and what goes wrong if you gate
+  the clock instead.
+- why `check_freq` is declared inside the testbench process — what a
+  procedure gains there that a package-level procedure would lack.
+- why the testbench shrinks W to 16, and why reduced-width verification is
+  legitimate for this design.
+
+---
+
+## Session 04.3 — Run, Break, Measure (~80 min)
+
+### Run
 
 From `course/work/lesson04/` (with the toolchain environment sourced —
 the `fpga` alias from lesson 00 does this):
@@ -568,7 +603,7 @@ format to Analog → Step and you will see the sawtooth — phase climbing
 linearly and wrapping, with `sq` as its MSB. That sawtooth *is* this
 lesson.
 
-## Explore
+### Explore
 
 Attempt these before peeking at anything in `course/solutions/`.
 
@@ -606,7 +641,7 @@ Attempt these before peeking at anything in `course/solutions/`.
    returns as gate time in lesson 10 and as dwell/CPI vs Doppler
    resolution in radar.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs / vhdl-mode:** stop typing port maps by hand. Put point inside
   `entity nco`, hit `C-c C-p C-w` (vhdl-port-copy), switch to the TB
@@ -634,7 +669,7 @@ Attempt these before peeking at anything in `course/solutions/`.
   past VHDL `integer` range and GHDL flags a bound check. That's one
   reason the `expected` computation uses the real-valued `2.0 ** W`.
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 05 you must have:
 

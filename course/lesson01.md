@@ -12,7 +12,11 @@ registered output; the same "wrap it in a clock edge" move reappears in every
 module through `theremin_top`. Lesson02 then turns the testbench itself into
 a first-class subject.
 
-## Objectives
+---
+
+## Session 01.1 — Signal Semantics & Delta Cycles (~60 min)
+
+### Objectives
 
 - Write an entity (the pinout) and an architecture (the contents) and say
   precisely which information lives in which.
@@ -25,9 +29,9 @@ a first-class subject.
 - Read a testbench's `wait until rising_edge(clk); wait for 1 ns;` idiom and
   explain the delta-cycle race it avoids.
 
-## Concepts
+### Concepts
 
-### The entity/architecture split
+#### The entity/architecture split
 
 A VHDL design unit comes in two parts:
 
@@ -53,7 +57,7 @@ exists and runs for the entire life of the design, whether or not anyone is
 `ghdl -a --workdir=build` maintains, and why analysis order matters (more in
 Tips & Pitfalls).
 
-### Signals are not variables — `<=` posts to the future
+#### Signals are not variables — `<=` posts to the future
 
 This is the conceptual hurdle of the whole course, so we take it slowly.
 
@@ -98,7 +102,7 @@ immediately — software semantics, scoped to one process. The testbench below
 uses one for `expected`. Rule of thumb: signals are wires between hardware;
 variables are scratch arithmetic inside one process.)
 
-### Delta cycles: "at the same time" on a sequential machine
+#### Delta cycles: "at the same time" on a sequential machine
 
 The commit phase can wake other processes: if the commit changes `q`, any
 process sensitive to `q` must now run — but no simulated time has passed.
@@ -127,7 +131,7 @@ the simulation analog of a combinational feedback loop.
 Keep this model in your head; the testbench section below is where it stops
 being philosophy and starts biting.
 
-### One expression, two circuits
+#### One expression, two circuits
 
 Here is a mux as pure combinational logic:
 
@@ -174,7 +178,7 @@ period?" is a question a tool can answer; "does this settle eventually?" is
 not). Compare `fpga/phase1/rtl/nco.vhd`: same shape, with an accumulator
 inside the wrapper instead of a mux.
 
-### The testbench races the DUT — and must lose politely
+#### The testbench races the DUT — and must lose politely
 
 Now the payoff. The testbench's checking process does this:
 
@@ -199,7 +203,7 @@ ordering — that snapshot consistency is the whole design of the language.
 
 Both outcomes are useful, and this course uses both:
 
-- `nco_tb.vhd` (which you will dissect in lesson04) checks `sq_out`
+- `nco_tb.vhd` (which you will dissect in lesson 04) checks `sq_out`
   immediately after the edge, deliberately sampling one delta behind — it
   counts edges over thousands of cycles and a one-cycle shift is absorbed by
   its ±1 tolerance. Its header says so.
@@ -214,7 +218,7 @@ cycle, this is almost always why. You will prove it to yourself in Explore
 exercise 2 by deleting the `wait for 1 ns` and watching R1 fail on the
 first vector.
 
-## Radar Connection
+### Radar Connection
 
 Why is hardware description not programming? Because a radar signal chain is
 not a sequence of steps — it is a *plumbing diagram running everywhere at
@@ -233,7 +237,7 @@ between the ADC and the detector adds a known number of clocks, and for a
 pulsed or FMCW system, uncounted latency literally becomes a range error
 (at our 12 MHz, one cycle is 83 ns — a 12.5 m range bias, since radar range
 is two-way: c·t/2).
-When lesson14 wires `theremin_top`, each block boundary is registered and
+When lesson 14 wires `theremin_top`, each block boundary is registered and
 the total latency is knowable by adding integers. That habit — every stage's
 delay pinned to a clock edge, tallied through the chain — starts here.
 
@@ -242,7 +246,24 @@ antenna input and a built-in calibration/test source. It is registered so
 the switch lands exactly on a sample boundary instead of mid-sample — the
 same reason ours is registered, in miniature.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why `q <= a;` schedules a future value instead of changing `q`, and why
+  `x <= y; y <= x;` inside a clocked process swaps the two signals instead of
+  destroying one.
+- how delta cycles let a sequential simulator model "everything at once" —
+  read-phase then commit-phase, repeated until no new events — and why
+  simulation time only advances once a delta produces no activity.
+- what hardware the same if/else describes with and without the
+  `if rising_edge(clk)` wrapper, and where the one-cycle latency comes from.
+- why a registered stage's latency is a countable, designed property — and
+  what an uncounted clock cycle of latency does to a radar's range estimate.
+
+---
+
+## Session 01.2 — Build & Run the Registered Mux (~60 min)
+
+### Build
 
 Create `course/work/lesson01/` and the three files below with Emacs. Type
 them or paste them, but read every line — the header comments carry the
@@ -303,7 +324,7 @@ Notes on the DUT:
   about nothing between edges. Listing them would still simulate correctly
   (the body does nothing without an edge) but misstate your intent.
 - No reset: a mux output needs no defined power-on value, and iCE40 flops
-  power up to '0' anyway. The counter in lesson02 *will* need its synchronous
+  power up to '0' anyway. The counter in lesson 02 *will* need its synchronous
   reset, and you'll see the `if rst = '1' ... elsif` shape from `nco.vhd`.
 
 **File: course/work/lesson01/reg_mux_tb.vhd**
@@ -438,7 +459,7 @@ Notes on the testbench — every line explainable, per course rules:
 **File: course/work/lesson01/Makefile**
 
 ```make
-# Lesson 01 solution — GHDL sim flow. Usage: make sim  (after sourcing
+# Lesson 01 — GHDL sim flow. Usage: make sim  (after sourcing
 # ~/tools/oss-cad-suite/environment). Mirrors tutorial/Makefile — same
 # flags, same shim, no synthesis targets.
 
@@ -466,7 +487,7 @@ the testbench, run it. `reg_mux.vhd` must precede `reg_mux_tb.vhd` in `SRC`
 — the testbench instantiates `entity work.reg_mux`, so the mux must already
 be in the `work` library when the testbench is analyzed.
 
-## Run
+### Run
 
 From `course/work/lesson01/`:
 
@@ -497,7 +518,24 @@ consume one edge each, so the 8th edge is at 41.6665 + 7 × 83.333 =
 625.9975 ns. Exactly what the log says. (The odd digits exist because
 83.333 ns is our stand-in for 1/12 MHz, not the real irrational thing.)
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why `reg_mux.vhd` must precede `reg_mux_tb.vhd` in the Makefile's `SRC`
+  line — what the `work` library is and why analysis order matters.
+- why the DUT's process is sensitive to `clk` only, and what listing `sel`,
+  `a`, `b` there would misstate about the hardware.
+- why the R1 loop's `drive → wait for edge → wait 1 ns → check` sequence
+  samples a fully consistent post-edge world, in terms of delta 0 versus the
+  commit.
+- how the `@625997500fs` timestamp on the R1 report is predicted from the
+  first rising edge at half a period plus seven more periods plus the 1 ns
+  settle.
+
+---
+
+## Session 01.3 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Solutions live in `course/solutions/lesson01/` — attempt these before
 peeking.
@@ -533,9 +571,9 @@ peeking.
    VHDL-2008's `to_string(q)` replaces `std_logic'image(q)`), but the DUT's
    process body does not change at all — the same if/else now describes four
    LUT+flop bit-slices. That "describe one bit, get N" scaling is why the
-   NCO's 32-bit accumulator in lesson04 is still three lines.
+   NCO's 32-bit accumulator in lesson 04 is still three lines.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs, ports for free:** with point inside the `reg_mux` entity, `C-c
   C-p C-w` (`vhdl-port-copy`) captures the port list; in the testbench,
@@ -564,9 +602,9 @@ peeking.
   mismatch, the worst bug class in HDL. VHDL-2008's `process (all)` sidesteps
   it for combinational processes; clocked processes stay `process (clk)`.
 
-## Checkpoint
+### Checkpoint
 
-Before lesson02, all of the following are true:
+Before lesson 02, all of the following are true:
 
 - `course/work/lesson01/` contains `reg_mux.vhd`, `reg_mux_tb.vhd`, and
   `Makefile`, and `make sim` prints the `R1 pass:`, `R2 pass:`, and

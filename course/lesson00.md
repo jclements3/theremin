@@ -22,9 +22,13 @@ you stand up today.
 - Deliberately break the build two ways (syntax error, failing assert) and
   read both failure shapes fluently.
 
-## Concepts
+---
 
-### The toolchain, and why it is pinned
+## Session 00.1 — Toolchain, Pipeline, and the Emacs Loop (~50 min)
+
+### Concepts
+
+#### The toolchain, and why it is pinned
 
 This course uses the open FPGA flow: **GHDL** simulates VHDL, **Yosys**
 synthesizes it to a netlist, **nextpnr** places and routes for the iCE40, and
@@ -62,7 +66,7 @@ you will trip over if you skip them:
    unconditionally. This is the one and only time the course explains it;
    from here on it's just a line in the Makefile.
 
-### What GHDL actually does: analyze, elaborate, run
+#### What GHDL actually does: analyze, elaborate, run
 
 GHDL is not an interpreter. It compiles your VHDL to native code in three
 distinct steps, and each step catches a different class of mistake:
@@ -88,7 +92,7 @@ distinct steps, and each step catches a different class of mistake:
 Keep this pipeline in your head: "which step failed?" is always the first
 debugging question, and the Makefile echoes each command so you can see.
 
-### The two files you'll build
+#### The two files you'll build
 
 **`hello.vhd`** holds an *entity* named `hello_tb` with no ports and an
 *architecture* containing one *process*. Lesson 01 develops entities and
@@ -127,7 +131,7 @@ no synthesis targets (nothing to synthesize until lesson 05). Line by line:
 - The three recipe lines are exactly the analyze → elaborate → run pipeline
   above, with `--assert-level=failure` on the run.
 
-### The Emacs loop
+#### The Emacs loop
 
 You will spend the course in one loop: edit VHDL, compile, jump to the first
 error, fix, recompile. Emacs runs the whole loop without leaving the editor.
@@ -167,7 +171,7 @@ exactly what Emacs expects, so this Just Works. `M-g p` goes back; `M-g M-n`
 That's the whole loop: `<f6>`, read the first error, `M-g n`, fix, `<f6>`.
 You'll drill it below until it's reflex.
 
-## Radar Connection
+### Radar Connection
 
 This lesson's radar content is not a signal-processing concept — it's a
 discipline, and it's the one the others stand on: **qualified, pinned tools
@@ -196,7 +200,24 @@ The theremin connection proper starts in lesson 01. Today you're doing what a
 radar shop calls tool qualification — and what everyone else calls making
 sure the build isn't lying to you.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- which of GHDL's three steps (analyze / elaborate / run) catches a syntax
+  error, a missing-symbol link error, and a failing assert — and why each
+  class of mistake can only surface at its step.
+- why toolchain activation is per-shell (an alias, not `.bashrc`), and why
+  the `M-x compile` command must `source` the environment itself instead of
+  relying on the `fpga` alias.
+- why a testbench entity has no ports, and what happens to a process that
+  has no `wait` statement.
+- why pinned tool versions and captured simulation output are the hobbyist
+  form of DO-254 tool qualification and requirement traceability.
+
+---
+
+## Session 00.2 — Build, Break, and Verify (~60 min)
+
+### Build
 
 You are creating two files in your own working directory. `course/work/` is
 git-ignored scratch space — it's yours. Verified reference copies of every
@@ -264,7 +285,7 @@ Makefile gotcha before you save: recipe lines (the indented commands under
 `makefile-mode` inserts tabs for you and highlights suspicious lines; if make
 greets you with `*** missing separator.  Stop.`, a recipe line has spaces.
 
-## Run
+### Run
 
 All commands assume cwd = `course/work/lesson00/`. First, a terminal-side
 green run; then the same thing from Emacs; then two deliberate failures.
@@ -275,10 +296,19 @@ Activate the toolchain in this shell (once per terminal):
 fpga
 ```
 
-Expected output: nothing — but the prompt gains the `⦗OSS CAD Suite⦘` badge,
-and `which ghdl` now answers `~/tools/oss-cad-suite/bin/ghdl`.
+Expected output:
 
-### Green
+```text
+(no output on success)
+```
+
+(Course convention, used from here on: when a command is silent on success,
+its Expected output block says `(no output on success)` rather than showing
+nothing.) The evidence here is indirect — the prompt gains the
+`⦗OSS CAD Suite⦘` badge, and `which ghdl` now answers
+`~/tools/oss-cad-suite/bin/ghdl`.
+
+#### Green
 
 ```bash
 make sim
@@ -312,7 +342,7 @@ source ~/tools/oss-cad-suite/environment && make -C ~/projects/theremin/course/w
 The `*compilation*` buffer shows the identical output and finishes
 `Compilation finished`. From now on, `<f6>` reruns it.
 
-### Red drill 1 — syntax error, caught by analyze
+#### Red drill 1 — syntax error, caught by analyze
 
 In `hello.vhd`, delete the semicolon at the end of line 14 (the
 `report "Hello, world...` line), save, and press `<f6>`.
@@ -335,7 +365,7 @@ where the semicolon belongs. Type it back, save, `<f6>`: green again.
 That `<f6>` → `M-g n` → fix → `<f6>` cycle is the muscle memory this drill
 exists to build.
 
-### Red drill 2 — failing assert, caught at runtime
+#### Red drill 2 — failing assert, caught at runtime
 
 Now break the *logic* instead of the syntax: on line 15, change
 `assert 2 + 2 = 4` to `assert 2 + 2 = 5`, save, `<f6>`.
@@ -367,7 +397,7 @@ the design stops producing it.
 
 Restore `= 4`, save, `<f6>`, and confirm you're green before moving on.
 
-## Explore
+### Explore
 
 Solutions for this lesson are in `course/solutions/lesson00/` — attempt these
 first.
@@ -395,7 +425,7 @@ first.
    never whisper. Restore the file (both the `= 4` and the
    `severity failure`) and finish green.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs:** if `M-g n` says `No compilation errors` right after an
   obviously red build, your `*compilation*` buffer probably scrolled past a
@@ -421,7 +451,7 @@ first.
   elaboration errors; `make clean` costs half a second and is always the
   first thing to try when an error makes no sense.
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 01, all of the following are true:
 

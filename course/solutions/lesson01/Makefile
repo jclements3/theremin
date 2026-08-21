@@ -1,4 +1,4 @@
-# Lesson 01 solution — GHDL sim flow. Usage: make sim  (after sourcing
+# Lesson 01 — GHDL sim flow. Usage: make sim  (after sourcing
 # ~/tools/oss-cad-suite/environment). Mirrors tutorial/Makefile — same
 # flags, same shim, no synthesis targets.
 

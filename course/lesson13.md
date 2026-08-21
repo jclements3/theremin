@@ -12,7 +12,11 @@ instrument sounds like. It is the smallest module in the signal chain and
 the only one whose requirements are partly aesthetic — which is exactly why
 every choice in it has to be made in the open, with numbers.
 
-## Objectives
+---
+
+## Session 13.1 — Deriving the Map (~75 min)
+
+### Objectives
 
 - Derive every generic default in `pitch_map` — P_REF, FCW_BASE, FCW_MIN,
   FCW_MAX, the slope 2^SHIFT — from the system's clock, oscillator, and
@@ -28,9 +32,9 @@ every choice in it has to be made in the open, with numbers.
 - Build `pitch_map` and verify monotonicity, range clamping, and the
   smoothing step response with exact-equality, requirement-tagged asserts.
 
-## Concepts
+### Concepts
 
-### The last translation
+#### The last translation
 
 `freq_meas` hands us `period` — clock cycles per 64 antenna edges — and the
 NCO wants `fcw` — phase ticks per clock. Between them sits a translation
@@ -46,7 +50,7 @@ with four requirements you can hear:
 Those four requirements are, in order: an offset, a slope with a fixed
 sign, a clamp, and a low-pass filter. That is the whole module.
 
-### Choosing the map: every constant from first principles
+#### Choosing the map: every constant from first principles
 
 Lesson 04 gave you the NCO tick: one fcw count is f_clk / 2^32 =
 12 MHz / 2^32 ≈ 2.794 mHz of output pitch. So tuning is a multiplication:
@@ -109,7 +113,7 @@ still under the clamp. So in normal play neither clamp engages — they are
 guard rails, not walls, and the testbench has to work to prove the top one
 even exists.
 
-### What the linear map pretends, stated honestly
+#### What the linear map pretends, stated honestly
 
 The map is linear in period. Nothing in the physics is. Walk the chain:
 
@@ -149,7 +153,7 @@ we *chose* it, not because two coils agreed. The linear map isn't the
 truth — it's a documented, bounded approximation whose knobs we own. Say
 that sentence in a design review and nobody can hurt you.
 
-### Clamping: signed first, then bounded
+#### Clamping: signed first, then bounded
 
 Requirement 3 has a trap in it. `period` is unsigned, and a hand-near
 period (4267) is *bigger* than P_REF (3840). Compute `P_REF - period` in
@@ -169,7 +173,7 @@ a civilized rate instead of slamming a 24-bit transient into it. And reset
 preloads fcw with FCW_BASE, so the instrument wakes up *on pitch* instead
 of sweeping up from silence — a small courtesy, audible every power-up.
 
-### Smoothing: a one-pole tracking loop, in integers
+#### Smoothing: a one-pole tracking loop, in integers
 
 `period` carries ±1–2 counts of quantization jitter (lesson 10), which the
 map amplifies to ±0.2–0.4 Hz of pitch, re-rolled 3000 times a second.
@@ -203,7 +207,7 @@ target *exactly*, from both directions, and the testbench can use exact
 equality instead of tolerances. When an integer filter lets you assert
 `=`, take the gift — it means the arithmetic has no residue to hide.
 
-## Radar Connection
+### Radar Connection
 
 `pitch_map` is two radar staples wearing a music costume: a calibration
 curve and an alpha filter.
@@ -241,7 +245,26 @@ deadband and limit cycles, and production filters carry exactly this kind
 of guaranteed-minimum-step or dither logic. The theremin version is just
 small enough to prove convergent by staring at it.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- how FCW_BASE = 93640 is "derived, then pinned": where 93639.45 comes
+  from, and why the 0.55-count offset is priced against the 0.18 Hz a
+  single period count moves the pitch instead of being rounded away.
+- which stages of the hand→pitch chain are nonlinear and why the linear
+  map's smooth scale compression (≤ ~11% at full reach) never threatens
+  monotonicity or repeatability.
+- why `P_REF - period` must be computed in signed arithmetic during
+  *normal play*, and why the clamp brackets the mapped target before the
+  smoother rather than after it.
+- why the integer smoother needs the +1 nudge to converge exactly, and how
+  α = 1/8 at the ~3 kHz measurement rate becomes a ~2.4 ms time constant
+  that kills fizz but passes a hand gesture.
+
+---
+
+## Session 13.2 — Build & Run (~90 min)
+
+### Build
 
 Two files plus the Makefile. Solutions live in `course/solutions/lesson13/`
 — type the code in rather than copying, and resist peeking until you've
@@ -639,7 +662,7 @@ Verification decisions worth naming, because you'll reuse them:
 **File: course/work/lesson13/Makefile**
 
 ```make
-# Lesson 13 solutions — pitch_map. Usage: make sim
+# Lesson 13 — pitch_map. Usage: make sim
 # (after sourcing ~/tools/oss-cad-suite/environment). Mirrors
 # tutorial/Makefile — same flags, same shim. No synthesis targets:
 # pitch_map is synthesized as part of theremin_top in lesson14, not here.
@@ -668,7 +691,7 @@ on purpose: `pitch_map` is synthesized where it's used, inside
 `theremin_top` in lesson 14. `SRC` order is load-bearing as always —
 `pitch_map.vhd` before the TB that instantiates it twice.
 
-## Run
+### Run
 
 From `course/work/lesson13/` (with the toolchain environment sourced — the
 `fpga` alias from lesson 00 does this):
@@ -714,7 +737,23 @@ just the word "pass":
   contract rather than at physical rate is why unit TBs stay fast —
   lesson 14's integration TB pays the real-time price exactly once.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why `diff → summed → target → delta → step` are variables rather than
+  signals, and what they become in synthesis.
+- why the testbench needs a second DUT with SHIFT overridden to 8 — what
+  the pinned defaults leave untestable, and why deleting the "unreachable"
+  clamp instead would be the wrong fix.
+- why R2's fcw values fall by exactly 12800 per line, and what any other
+  first difference would prove about the arithmetic.
+- why R4 converges in 60 measurements when the idealized filter estimate
+  says ≈ 71 — where the floor-toward-−∞ shift shows up in the step count.
+
+---
+
+## Session 13.3 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Attempt these before peeking at `course/solutions/lesson13/`.
 
@@ -757,7 +796,7 @@ Attempt these before peeking at `course/solutions/lesson13/`.
    spends headroom; the clamps silently became part of the playable
    instrument. Restore 6.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs / vhdl-mode:** this lesson's identifiers are long and repetitive
   (`SMOOTH_SHIFT`, `FCW_BASE`, `prev_fcw`…). `M-/` (dabbrev-expand)
@@ -787,7 +826,7 @@ Attempt these before peeking at `course/solutions/lesson13/`.
   [FCW_MIN, FCW_MAX] before it touches fcw. Filter placement around
   nonlinearities is a real design decision, not refactoring noise.
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 14 you must have:
 
@@ -809,6 +848,8 @@ Before lesson 14 you must have:
   deadband/limit cycle ↔ the stalled integer filter of Explore 2.
 
 Next: lesson 14 — no new arithmetic, no new concepts, just the hard part:
-wiring seven verified modules into `theremin_top`, watching an integration
+wiring a six-module chain of verified blocks into `theremin_top` (the
+seventh verified file, `osc_model`, plays the hand from the testbench
+side), watching an integration
 TB move a simulated hand, and making the whole instrument fit, time, and
 sing on both boards.

@@ -13,7 +13,11 @@ lesson 99 — and the lesson where the course's deepest radar idea lands:
 *observation time buys frequency resolution*, whether you call it gate time
 or a coherent processing interval.
 
-## Objectives
+---
+
+## Session 10.1 — The Counting Trade (~75 min)
+
+### Objectives
 
 - Explain direct vs reciprocal frequency counting and compute which wins,
   given f_in and f_clk, at equal measurement time.
@@ -27,9 +31,9 @@ or a coherent processing interval.
 - Build `freq_meas` and `osc_model`, and drive them from a self-checking
   testbench that sweeps a simulated hand through the pitch field.
 
-## Concepts
+### Concepts
 
-### The problem: a frequency you can feel
+#### The problem: a frequency you can feel
 
 The antenna oscillator free-runs near 200 kHz; an approaching hand adds a
 few picofarads and pulls it *down*, a couple of percent at full reach. The
@@ -42,7 +46,7 @@ Digitally, "measure a frequency" means exactly one thing: **counting edges
 against a time base**. There are two ways to arrange the count, and the
 difference between them is the entire lesson.
 
-### Direct counting: the bench-instrument default
+#### Direct counting: the bench-instrument default
 
 Open a gate for a fixed time T, count how many rising edges of the input
 fall inside it, and estimate f = count / T. This is what the display of a
@@ -65,7 +69,7 @@ silence to full reach — a six-key piano. Direct counting fails because it
 counts the *slow* signal: 320 µs contains only 64 edges of a 200 kHz
 input.
 
-### Reciprocal counting: count the fast thing instead
+#### Reciprocal counting: count the fast thing instead
 
 Flip it. Instead of counting input edges against the clock, count **clock
 cycles against the input edges**: open the window on a rising edge of the
@@ -104,11 +108,11 @@ is why a good one shows the same digit count at 10 Hz and 10 MHz.)
 How good is 52 Hz, followed to the ear? One count of `period` becomes,
 through lesson 13's `pitch_map` (SHIFT = 6), 2^6 = 64 fcw ticks of lesson
 04's 2.8 mHz each: ≈ 0.18 Hz of audible pitch per count — about 1/87 of a
-semitone at middle C, an order of magnitude below the ~5-cent threshold
+semitone at middle C, roughly a quarter of the ~5-cent threshold
 trained ears notice. The measurement is not the weak link, by design, and
 you now own every number in that argument.
 
-### The gate-time trade, stated once, honestly
+#### The gate-time trade, stated once, honestly
 
 Both schemes obey the same law: the product of measurement time and
 frequency resolution is fixed.
@@ -134,7 +138,7 @@ every 320 µs — 3125 per second, an order of magnitude faster than musical
 need, with resolution to spare. Explore 1 has you walk both directions
 along the trade.
 
-### The machine: two counters and a fencepost
+#### The machine: two counters and a fencepost
 
 The datapath is small: an edge detector, an edge counter, a cycle counter.
 
@@ -174,7 +178,7 @@ Three details carry all the correctness:
   producer-side handshake shape you'll meet as `stb`/`busy` in lesson 11
   and consume in lesson 13.
 
-### osc_model: simulating the sensor you don't have
+#### osc_model: simulating the sensor you don't have
 
 `freq_meas` needs something to measure, and the real something — a 74HC14
 Schmitt-trigger relaxation oscillator whose capacitance includes a human
@@ -209,12 +213,12 @@ physics behind it. Choosing what a model must get right — and saying out
 loud what it doesn't — is a professional skill with a name in the radar
 world. Which brings us to:
 
-## Radar Connection
+### Radar Connection
 
 This is the deepest radar tie-in of the course. Two ideas, both
 load-bearing in every radar you'll ever work on.
 
-### Dwell, CPI, and Doppler resolution
+#### Dwell, CPI, and Doppler resolution
 
 A CW or pulse-Doppler radar measures target velocity by measuring a
 frequency — the Doppler shift f_d = 2v/λ — and it faces *exactly* the law
@@ -254,7 +258,7 @@ resolution. Lesson 12's accumulate-and-dump mixer is your first step
 toward that; the resolution law itself is identical in both worlds,
 because it's Fourier's law, not an implementation detail.
 
-### Model first, hardware later
+#### Model first, hardware later
 
 `osc_model` is not a workaround for a missing breadboard — it is the
 method. No radar signal processor in history met its antenna before
@@ -279,7 +283,24 @@ to suspect. Keep the model simple, labeled, and written down — the
 difference between "it worked in sim" as an engineering statement and as
 a punchline.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why reciprocal counting beats direct counting by exactly f_clk/f_in when
+  the input is slower than the reference clock, and where the crossover
+  between the two schemes sits.
+- why the product T·Δf is a constant of this counter no matter how EDGES is
+  chosen, and what a faster clock buys that a longer window cannot.
+- how EDGES maps onto a radar's dwell and CPI, and why Δv = λ/(2·CPI) makes
+  dwell the scarcest resource in a radar timeline.
+- why verifying `freq_meas` against a documented model contract before the
+  oscillator exists is standard method, and which side the contract tells
+  you to suspect when sim and bench disagree.
+
+---
+
+## Session 10.2 — Build & Run (~90 min)
+
+### Build
 
 Three files plus the Makefile. Solutions live in
 `course/solutions/lesson10/` — type the code in rather than copying, and
@@ -670,7 +691,7 @@ Dissection:
 **File: course/work/lesson10/Makefile**
 
 ```make
-# Lesson 10 solutions — freq_meas + osc_model. Usage: make sim
+# Lesson 10 — freq_meas + osc_model. Usage: make sim
 # (after sourcing ~/tools/oss-cad-suite/environment). Mirrors
 # tutorial/Makefile — same flags, same shim. No synthesis targets:
 # osc_model is simulation-only and freq_meas is synthesized as part of
@@ -702,7 +723,7 @@ it's used, inside `theremin_top` in lesson 14. `SRC` order is load-bearing
 as always: `osc_model.vhd` and `freq_meas.vhd` before the TB that
 instantiates them both.
 
-## Run
+### Run
 
 From `course/work/lesson10/` (with the toolchain environment sourced — the
 `fpga` alias from lesson 00 does this):
@@ -742,7 +763,22 @@ an engineer, not a scoreboard:
   rather than a drained event queue: the oscillator was still ticking
   when the lights went out.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why `cycle_cnt` starts at 1, not 0, and how R1's exactly-3840 result
+  leaves an off-by-one fencepost nowhere to hide.
+- why the testbench discards the first measurement after each hand move
+  before checking the next one.
+- why the ±2-count tolerance is derived from window-edge quantization
+  rather than tuned until the run passed.
+- why this testbench needs `std.env.finish` and a watchdog when no earlier
+  testbench did.
+
+---
+
+## Session 10.3 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Attempt these before peeking at `course/solutions/lesson10/`.
 
@@ -777,7 +813,7 @@ Attempt these before peeking at `course/solutions/lesson10/`.
    the Makefile's run line and watch `cycle_cnt` climb with no `valid` in
    sight. Restore 200_000.0 (and the Makefile).
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs / vhdl-mode:** with two instantiations to write, `C-c C-p C-w`
   (port-copy) / `C-c C-p C-i` (paste-instance) pays for itself twice —
@@ -809,7 +845,7 @@ Attempt these before peeking at `course/solutions/lesson10/`.
   consumer shape; `pitch_map` registers `period` only on the strobe for
   the same reason.
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 11 you must have:
 
@@ -828,6 +864,8 @@ Before lesson 11 you must have:
   synthesizable?" and another to "why is the first measurement after a
   hand move discarded?".
 
-Next: lesson 11 gives the instrument a mouth — a UART transmitter — so
-that from lesson 13 onward you can watch `period` and pitch decisions
-stream out of the design as bytes instead of squinting at waveforms.
+Next: lesson 11 gives the instrument a mouth — a UART transmitter. The
+audio chain never uses it, but it stays available as a sideband you can
+wire in yourself (lesson 11's Explore 4 stretch shows how) to watch
+`period` and pitch decisions stream out of the design as bytes instead
+of squinting at waveforms.

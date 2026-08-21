@@ -7,14 +7,20 @@ Those numbers now exist — inside the chip, where you cannot see them. This
 lesson builds the hardware equivalent of `printf`: `uart_tx`, an 8N1 serial
 transmitter that streams bytes to a laptop over one wire. It is a sideband,
 not part of the audio path — `theremin_top` (lesson 14) does not include
-it — but on lab day it is the difference between "the pitch is wrong" and
+it, and no later lesson wires it in for you; it stays available as a
+sideband you can wire in yourself (Explore 4's stretch shows how), and on
+the bench that wiring is the difference between "the pitch is wrong" and
 "the measured period is 4 011 when it should be 3 840." Along the way: a
 serial frame designed from nothing, a clock-division error budget, the
 busy/strobe handshake you will meet again in every streaming interface,
 and — the lesson's deepest point — why a testbench must *not* verify a
 transmitter by reusing the transmitter's own logic.
 
-## Objectives
+---
+
+## Session 11.1 — Designing 8N1 from Nothing (~75 min)
+
+### Objectives
 
 - Derive the 8N1 frame from first principles: why idle-high, why a start
   bit, why lsb-first, what the stop bit actually guarantees.
@@ -30,9 +36,9 @@ transmitter by reusing the transmitter's own logic.
   baud period instead of counting the DUT's divider — verification
   independence, made concrete.
 
-## Concepts
+### Concepts
 
-### The printf problem
+#### The printf problem
 
 Every debugging tool you own assumes a screen; the FPGA has pins. The
 cheapest bridge is one pin wiggled slowly enough that a USB-serial adapter
@@ -44,7 +50,7 @@ Both ends agree on a bit rate ahead of time, and everything else — where a
 byte starts, which bit is which — must be recoverable from the data wire
 alone. So let's design that from nothing.
 
-### Designing a serial frame from nothing
+#### Designing a serial frame from nothing
 
 One wire, two agreed constants (bit rate, byte width), no shared clock.
 Three problems to solve.
@@ -87,7 +93,7 @@ At 115 200 baud that is 11 520 bytes per second, ceiling. (Parity is one
 optional bit of error *detection* — it catches single flipped bits and
 nothing more; over ten centimeters of bench wire it buys little, so "N".)
 
-### The baud divider and its error budget
+#### The baud divider and its error budget
 
 The transmitter needs a tick every bit time: `DIV = CLK_HZ / BAUD` clocks.
 
@@ -132,7 +138,7 @@ rate is exact. A fractional divider is a phase accumulator is an NCO is a
 delta-sigma loop: lesson 04's machine, wearing its fourth hat. Explore 2
 builds it.
 
-### busy/stb: the smallest flow-control contract
+#### busy/stb: the smallest flow-control contract
 
 A frame takes 1 040 clocks to send; the rest of the design produces bytes
 in one. Something must mediate, and the smallest honest contract is two
@@ -157,7 +163,7 @@ land intact with nothing queued behind it. This
 producer-offers/consumer-throttles pattern is the seed of AXI-Stream's
 valid/ready handshake; `busy` is just `not ready`.
 
-### One shift register is the whole transmitter
+#### One shift register is the whole transmitter
 
 Here is the design insight that keeps `uart_tx` at three signals: **the
 frame is data**. Don't build an FSM with IDLE/START/DATA/STOP states that
@@ -184,7 +190,7 @@ This "control as a datum" move — encode the sequence in a register's
 contents rather than a state machine's cases — recurs constantly in good
 RTL; you saw its cousin in lesson 06's sequencer.
 
-### Verifying without a mirror
+#### Verifying without a mirror
 
 Now the verification question, and it has teeth. The lazy testbench checks
 `txd` by counting 104 clocks per bit — maybe even reusing the DUT's `DIV`
@@ -216,7 +222,7 @@ never would. One severity note: "no start bit within 20 bit times" asserts
 `failure` (nothing after it could mean anything), while decode mismatches
 assert `error` and continue — one run, all verdicts, the lesson 02 ladder.
 
-## Radar Connection
+### Radar Connection
 
 - **The instrumentation link is the first thing a radar grows.** Before a
   testbed detects anything, it streams housekeeping — AGC state, STALO
@@ -252,7 +258,26 @@ assert `error` and continue — one run, all verdicts, the lesson 02 ladder.
   checker imports a constant from the DUT, ask who is checking the
   constant.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why the start bit's falling edge is the receiver's *only* timing
+  reference, and how re-synchronizing on every frame converts a frequency
+  error into a bounded per-frame phase error instead of an accumulating one.
+- where the divider's 0.16% error sits against the geometric budget — the
+  d7 mid-bit sample drifting ~1.4% of a bit against a 50% limit — and why
+  the arithmetic puts the cliff at DIV = 99 for an ideal receiver.
+- why a strobe that arrives mid-frame is dropped rather than queued, and
+  why "ignored, by design, and tested" is a contract while "undefined"
+  is a bug factory.
+- what class of bug a testbench that counts the DUT's `DIV` clocks per bit
+  is structurally blind to, and why the checker must decode from the spec
+  in ideal time units instead.
+
+---
+
+## Session 11.2 — Build & Run (~90 min)
+
+### Build
 
 Three files, byte-for-byte the reference implementation in
 `course/solutions/lesson11/` — which exists, and which you should resist
@@ -589,9 +614,10 @@ Dissection:
   the index *is* the lsb-first rule, bit 0 filled first. All in ideal
   `BIT_TIME` units: the drift analysis is being exercised, not assumed.
 - **The poke is surgical.** During the hammered frame, `stb` is held with
-  the *complement* byte from d1 through d5 — hundreds of clocks — and the
-  frame must still decode as the original (R2 catches corruption), busy
-  must still be high at d5, and the post-frame `check_idle_high` catches
+  the *complement* byte from the mid-bit sample of d1 to the mid-bit
+  sample of d5 — four bit-times, hundreds of clocks — and the frame must
+  still decode as the original (R2 catches corruption), busy must still
+  be high at mid-d5, and the post-frame `check_idle_high` catches
   the other failure mode: a queued second frame would put a start edge in
   the idle window. Three independent asserts triangulate "ignored."
 - **`end_frame` waits for busy's fall with a bound** — 2 bit-times, not
@@ -608,7 +634,7 @@ Dissection:
 **File: course/work/lesson11/Makefile**
 
 ```make
-# Lesson 11 solution — uart_tx + decoding testbench. Usage: make sim
+# Lesson 11 — uart_tx + decoding testbench. Usage: make sim
 # (after sourcing ~/tools/oss-cad-suite/environment). Mirrors
 # tutorial/Makefile — same flags, same shim. No synthesis targets:
 # uart_tx joins a top-level build only if you wire it in yourself
@@ -639,7 +665,7 @@ load-bearing, lesson 04), elaborate with the glibc shim, run with
 `uart_tx` reaches hardware only if you wire it into a top level yourself —
 see Explore 4's stretch goal.
 
-## Run
+### Run
 
 From `course/work/lesson11/` (toolchain environment sourced — the `fpga`
 alias from lesson 00):
@@ -677,7 +703,26 @@ shares its timestamp with its "R1 pass": both fire at the mid-stop sample,
 where the frame's verdict is complete. Total: 434 µs of simulated time for
 four bytes. Serial is slow; that is Explore 4's subject.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why the whole 8N1 frame lives in one 10-bit shift register — start and
+  stop bits as payload, not states — and how backfilling `'1'` on every
+  shift makes the idle line fall out of the same path with no special case.
+- why the `stb` check living *only* inside the `bits_left = 0` branch is
+  the entire implementation of "strobe ignored while busy," with nothing
+  elsewhere to get wrong mid-frame.
+- why loading `DIV - 1` and shifting on zero yields exactly DIV clocks per
+  bit, and why loading `DIV` instead would be a fencepost error the
+  testbench would still pass.
+- why each "R2 pass" line in the log shares its timestamp with its "R1
+  pass" — both verdicts complete at the mid-stop sample — and why four
+  bytes cost 434 µs of simulated time.
+
+---
+
+## Session 11.3 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Attempt these before opening `course/solutions/lesson11/`.
 
@@ -714,8 +759,8 @@ Attempt these before opening `course/solutions/lesson11/`.
    left to right), `busy` is a clean 10-bit-wide envelope, and cursors
    across one bit measure 8.667 µs — 104 clocks, not the ideal 8.681. You
    are looking at the 0.16% with your own eyes. Then find the poke on the
-   0xA5 frame: `stb` high for four data bits, `txd` serenely ignoring it.
-   Remove the flag afterwards.
+   0xA5 frame: `stb` high for four bit-times (mid-d1 to mid-d5), `txd`
+   serenely ignoring it. Remove the flag afterwards.
 4. **Paper: can telemetry keep up with the sensor?** At lesson 10's
    defaults the measurement rate is one `valid` per 3 840 clocks — 3 125
    measurements/s. Streaming each 24-bit period raw is 3 bytes: 9 375 B/s,
@@ -731,7 +776,7 @@ Attempt these before opening `course/solutions/lesson11/`.
    second channel, so `txd` can reach your laptop's `/dev/ttyUSB*` — and
    watch periods stream as you wave your hand.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs / vhdl-mode: never type a port map again.** Put point in the
   `uart_tx` entity and hit `C-c C-p C-w` (`vhdl-port-copy`); then in the
@@ -756,7 +801,7 @@ Attempt these before opening `course/solutions/lesson11/`.
   *level*-sampled whenever the transmitter is idle: hold it high across a
   frame boundary and the moment busy falls, a second frame starts with
   whatever `data` then holds. The poke test passes only because the TB
-  drops `stb` at d5, before the frame ends. In your own producers, pulse
+  drops `stb` at mid-d5, before the frame ends. In your own producers, pulse
   stb for one cycle (lesson 10's `valid` is already shaped like this) or
   gate it with `not busy`.
 - **On the bench, "UART garbage" means rate mismatch until proven
@@ -766,7 +811,7 @@ Attempt these before opening `course/solutions/lesson11/`.
   scope cursors across the start bit settle it: measure the bit, divide
   into 1 second, and argue with no one.
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 12 you must have:
 

@@ -1,4 +1,4 @@
-# Lesson 12 solutions — het_mixer (the heterodyne heart). Usage: make sim
+# Lesson 12 — het_mixer (the heterodyne heart). Usage: make sim
 # (after sourcing ~/tools/oss-cad-suite/environment). Mirrors
 # tutorial/Makefile — same flags, same shim. No synthesis targets:
 # het_mixer is the standalone physics-authentic path; theremin_top

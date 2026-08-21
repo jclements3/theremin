@@ -2,8 +2,8 @@
 
 *Where we are.* Lesson04's NCO gives you a phase that sweeps the circle at
 exactly the frequency you command — but so far you've only listened to its
-top bit, a square wave. That was fine for the A440 bitstream (lesson05) and
-for `scale_seq` (lesson06), because a speaker driven by a square wave still
+top bit, a square wave. That was fine for the A440 bitstream (lesson 05) and
+for `scale_seq` (lesson 06), because a speaker driven by a square wave still
 plays the right pitch, just wrapped in odd harmonics. A theremin should sound
 like a theremin, not an alarm clock, so this lesson converts phase into
 *sine samples*: a lookup table that exploits the sine wave's symmetries to
@@ -14,7 +14,11 @@ yosys `stat` report closely enough to know the difference. Next lesson the
 delta-sigma DAC turns these samples into a 1-bit stream your RC filter can
 smooth into an actual voltage.
 
-## Objectives
+---
+
+## Session 07.1 — Folding the Sine (~75 min)
+
+### Objectives
 
 - Size a sine table from first principles: what phase bits cost, what data
   bits cost, and why 2**10 × 8 bits is enough for this instrument.
@@ -30,9 +34,9 @@ smooth into an actual voltage.
 - Explain the module's 1-cycle latency and why the testbench checks it
   explicitly.
 
-## Concepts
+### Concepts
 
-### From phase to voltage, and what the top bit was costing you
+#### From phase to voltage, and what the top bit was costing you
 
 A square wave at frequency f contains f plus every odd harmonic — 3f at a
 third of the amplitude, 5f at a fifth, forever; your ear hears buzzy and
@@ -56,7 +60,7 @@ below the fundamental, under this chain's other noise floors. The second
 size decision is `DATA_BITS = 8`: amplitude quantization, worth roughly
 6.02×8 + 1.76 ≈ 50 dB of signal-to-quantization-noise — more than enough
 for this instrument, though don't credit the 1-bit DAC for the limit:
-lesson08 shows the delta-sigma stage actually preserves about 13 effective
+lesson 08 shows the delta-sigma stage actually preserves about 13 effective
 bits (≈78 dB) in the audio band, so this LUT, not the DAC, is the chain's
 amplitude bottleneck — and it's the cheap block to widen if you ever need
 to. So the naive table is:
@@ -67,7 +71,7 @@ to. So the naive table is:
 
 Hold that number; we're about to shrink it by 4.
 
-### Quarter-wave folding: pay for 90°, get 360°
+#### Quarter-wave folding: pay for 90°, get 360°
 
 A sine wave carries the same quarter-cycle of information four times:
 
@@ -106,7 +110,7 @@ drops from 1024 entries to 256:
 2**8 entries  ×  8 bits  =  2048 bits — a quarter of the naive table
 ```
 
-### The half-sample offset, or: how folding becomes exact
+#### The half-sample offset, or: how folding becomes exact
 
 Here's the trap everyone falls into the first time. Suppose entry i stores
 `sin(i * 90°/Q)` — samples *at* the grid points, starting at exactly 0°.
@@ -148,10 +152,10 @@ it stored -128 anywhere, the sign-fold's negation would compute +128 and
 wrap to -128 — a full-scale glitch four times per cycle. So the amplitude
 constant is `2**(DATA_BITS-1) - 1 = 127`: every stored value is in 0..127,
 every negated value is in -127..0, and negation can *never* overflow. This
-is the same asymmetry you met in lesson03's signed saturation — here we
+is the same asymmetry you met in lesson 03's signed saturation — here we
 design it out of reach instead of clamping.
 
-### The init function: math_real at elaboration time
+#### The init function: math_real at elaboration time
 
 Lesson03 computed single constants with `math_real`. This module computes
 256 of them:
@@ -194,7 +198,7 @@ sine_lut.vhd:61:12:note: found ROM "n15", width: 8 bits, depth: 256
 Your table survived the trip into the synthesizer as a recognized memory.
 Where it lands in the fabric is the next question.
 
-### Block RAM, and the rule that decides who gets it
+#### Block RAM, and the rule that decides who gets it
 
 An iCE40 logic cell is a 4-input LUT plus a flip-flop; storing data in
 fabric means burning LUTs as tiny ROMs. But the die also has dedicated
@@ -252,11 +256,11 @@ final netlist. `SB_RAM40_4K` count tells you BRAMs; a suspiciously large
 `SB_LUT4` count tells you a memory fell into fabric; and the `memory_dff`
 lines tell you *why*.
 
-### Latency is part of the interface
+#### Latency is part of the interface
 
 The output register means `data` answers for the phase presented one clock
 *earlier*. One cycle is nothing for audio, but it is a contract: when
-lesson14 wires `nco -> sine_lut -> dsm_dac`, every stage's delay adds, and
+lesson 14 wires `nco -> sine_lut -> dsm_dac`, every stage's delay adds, and
 a testbench that doesn't know the pipeline depth reads garbage. So the
 testbench pins it down as requirement R4: after a phase step, `data` must
 *not* change before the next edge (registered, not combinational) and
@@ -269,7 +273,7 @@ matter) and no enable (a lookup every clock is free; downstream samples
 when it cares). House style mandates resets and enables on *stateful*
 logic; a ROM lookup is arithmetic that happens to take a cycle.
 
-## Radar Connection
+### Radar Connection
 
 **Waveform memory and the DDS spur floor.** Swap the RC filter for a power
 amplifier and the sine table for "arbitrary waveform," and this lesson's
@@ -297,7 +301,24 @@ for two layers of XOR-grade logic. Same table, same fold, same `stat`
 discipline — the radar version just has a spur budget taped above the
 bench.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why the half-sample offset makes `not addr` the *exact* mirror of the
+  quarter table rather than an off-by-one approximation — and why entry 0
+  is not 0 and entry Q-1 is not quite full scale.
+- why the amplitude constant is 127 and not 128: what a stored -128 would
+  do to the sign fold, and how the design puts that overflow out of reach.
+- when `init_rom` runs, and why calling `sin()` there is legal in a
+  synthesis flow that would reject the same call in a clocked process.
+- why a memory whose read data passes through the sign fold before the
+  flip-flop cannot land in iCE40 BRAM, and which yosys log lines tell you
+  where a memory actually went.
+
+---
+
+## Session 07.2 — Build & Run (~75 min)
+
+### Build
 
 Create `course/work/lesson07/` and enter the three files below. Read the
 module's header comment first — it declares requirements R1–R4, and every
@@ -308,7 +329,7 @@ While you type the module, watch for: the `rom` constant initialized by a
 function call (elaboration-time math), the `not addr` mirror and the
 guarded negation (the two folds), and `quad`/`addr`/`v` being process
 **variables**, not signals — each is computed and consumed within a single
-rising edge, which is exactly what variables are for (lesson01: signals
+rising edge, which is exactly what variables are for (lesson 01: signals
 update at the delta, variables update immediately).
 
 **File: course/work/lesson07/sine_lut.vhd**
@@ -399,7 +420,7 @@ begin
 end architecture rtl;
 ```
 
-The testbench takes a different shape from lesson03's paired
+The testbench takes a different shape from lesson 03's paired
 stimulus/check calls: it sweeps all 1024 phases once, capturing every
 registered output into an array, then checks **properties of the whole
 array**. There is deliberately no golden table of 1024 expected values —
@@ -548,7 +569,7 @@ begin
 end architecture sim;
 ```
 
-The Makefile is the lesson05 shape in miniature: the `sim` target you know,
+The Makefile is the lesson 05 shape in miniature: the `sim` target you know,
 plus a standalone `synth` target that runs yosys through the GHDL plugin
 and prints `stat` — no PCF, no place-and-route, just "what did my RTL
 become". A `wave` target is included because a sine table is the first
@@ -592,7 +613,7 @@ clean:
 	rm -rf build
 ```
 
-## Run
+### Run
 
 From `course/work/lesson07/` (with the `fpga` alias already sourced in your
 shell):
@@ -682,7 +703,24 @@ the eight output flip-flops. Note that `stat`-style cell counts appear
 earlier in the log too (the hierarchy pass prints one); the block after
 `3. Printing statistics` is the final netlist and the only one that counts.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why the testbench asserts symmetry *properties* of the captured array
+  instead of comparing against a 1024-entry golden trace — and why the
+  golden trace would be the less honest check.
+- how the ~85.29 µs timestamp on the R1–R3 report lines confirms the
+  whole-circle sweep: 1024 phases at one per 12 MHz clock.
+- the `make synth` log as a story, in order: `found ROM` → `removing
+  const-0 lane 7` → `no output FF found` → `using FF mapping` → a final
+  stat with zero `SB_RAM40_4K` and 132 `SB_LUT4`.
+- why only the stat block after `3. Printing statistics` describes the
+  final netlist, and what `-m ghdl` is doing on the yosys command line.
+
+---
+
+## Session 07.3 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Solutions live in `course/solutions/lesson07/` — attempt these before
 peeking.
@@ -703,7 +741,7 @@ peeking.
    computes entries that don't fit in 8 bits; watch GHDL emit
    `to_signed: vector truncated` warnings as +128 wraps to -128, then
    watch R1 and R3 fail (a stored -128 negates to... -128, breaking sign
-   symmetry — lesson03's asymmetric code, striking exactly as the module
+   symmetry — lesson 03's asymmetric code, striking exactly as the module
    header warned). One LSB of amplitude is what that headroom costs.
    Restore `- 1`.
 
@@ -737,7 +775,7 @@ peeking.
    Radar Connection prices at 6 dB of spur floor per phase bit. Restore
    both files.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **`sin` won't synthesize — until it will.** The dividing line is not the
   function, it's the context: `math_real` in constants, generics, and
@@ -753,7 +791,7 @@ peeking.
   you get `ERROR: Unknown command: ghdl`.
 - **Variables for intra-edge math.** `quad`, `addr`, `v` update
   immediately, in order, within the edge — a signal there would hand you
-  last delta's value (lesson01) and the folds would lag the phase by a
+  last delta's value (lesson 01) and the folds would lag the phase by a
   cycle each. Rule of thumb: variables for scratch math inside a process,
   signals for anything that leaves it.
 - **Emacs/vhdl-mode: sensitivity lists for free.** With everything under
@@ -771,9 +809,9 @@ peeking.
   *won't* catch it until someone changes PHASE_BITS. Keep slice bounds in
   terms of the generic, always.
 
-## Checkpoint
+### Checkpoint
 
-Before lesson08, you must have:
+Before lesson 08, you must have:
 
 - `make sim` in `course/work/lesson07/` printing `R1 pass` through
   `R4 pass` and the `testbench complete` line, zero FAILs.

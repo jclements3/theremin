@@ -1,4 +1,4 @@
-# Lesson 08 solution — minimal GHDL sim flow. Usage: make sim  (after
+# Lesson 08 — minimal GHDL sim flow. Usage: make sim  (after
 # sourcing ~/tools/oss-cad-suite/environment). Mirrors fpga/phase1/Makefile
 # in miniature — same flags, same shim, no synthesis targets.
 

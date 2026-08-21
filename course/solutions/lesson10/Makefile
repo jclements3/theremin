@@ -1,4 +1,4 @@
-# Lesson 10 solutions — freq_meas + osc_model. Usage: make sim
+# Lesson 10 — freq_meas + osc_model. Usage: make sim
 # (after sourcing ~/tools/oss-cad-suite/environment). Mirrors
 # tutorial/Makefile — same flags, same shim. No synthesis targets:
 # osc_model is simulation-only and freq_meas is synthesized as part of

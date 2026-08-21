@@ -5,18 +5,23 @@ have built and verified, in isolation, every organ of the instrument: an
 NCO (04), a sine table (07), a delta-sigma DAC (08), a synchronizer (09),
 a frequency counter (10), a UART you'll want on the bench (11), a mixer
 that taught you why a theremin is a CW radar (12), and a pitch mapper (13).
-Today there is no new arithmetic and no new VHDL. Today you wire seven
-verified modules into `theremin_top`, prove the *system* end-to-end against
-a simulated hand, and make it fit and meet timing on both boards. This is
+Today there is no new arithmetic and no new VHDL. Today you wire a
+six-module chain of verified blocks into `theremin_top` — the seventh
+verified file, `osc_model`, stays on the testbench side, playing the
+antenna — prove the *system* end-to-end against a simulated hand, and make it fit and meet timing on both boards. This is
 the lesson where you discover that a pile of correct modules is not yet a
 correct instrument — and that the gap between the two has its own
 engineering discipline, with its own tests, budgets, and failure modes.
 Lesson 99 flashes the result onto hardware; everything before that moment
 happens here, in simulation.
 
-## Objectives
+---
 
-- Wire the seven verified modules into `theremin_top` exactly per the
+## Session 14.1 — The System View (~75 min)
+
+### Objectives
+
+- Wire the six-module verified chain into `theremin_top` exactly per the
   curriculum signal chain, with a power-on reset and registered boundaries,
   and explain why system timing then decomposes module-by-module.
 - Run an end-to-end **system test**: black-box stimulus and checking
@@ -32,9 +37,9 @@ happens here, in simulation.
 - Read the icetime critical path — `period` register, through `pitch_map`'s
   arithmetic, into `fcw_r` — and state the timing margin at 12 MHz.
 
-## Concepts
+### Concepts
 
-### Integration is a discipline, not a chore
+#### Integration is a discipline, not a chore
 
 Every module you are about to instantiate has a green, requirement-tagged
 testbench. So what is left to get wrong? Plenty — and none of it lives
@@ -77,7 +82,7 @@ One 12 MHz clock domain end to end. The antenna oscillator is the only
 asynchronous input, and it crosses the border exactly once, through
 `sync_2ff` — nothing else in the design is allowed to touch `osc_in`.
 
-### Registered boundaries, and why timing composes
+#### Registered boundaries, and why timing composes
 
 Look down the chain and notice a deliberate pattern: **every module's
 output comes from a register.** `freq_meas` registers `period` and
@@ -107,7 +112,7 @@ audio period of 46,000 clocks. When you integrate designs where latency
 same rule holds; you just count the boundary registers into the range/
 Doppler bookkeeping instead of ignoring them.
 
-### Waking up with no reset button
+#### Waking up with no reset button
 
 Neither board has a reset pin wired to anything. After configuration,
 every register wakes in its init value and the design must sort itself
@@ -120,15 +125,15 @@ be invisible.
 
 Two start-up details are worth naming because the integration TB checks
 them. First, `rst` is a combinational decode of `por_cnt` fanned out to
-five modules — nextpnr will notice the fanout (129 flops) and promote it
-to a global buffer; you'll see `promoting rst [reset]` and `SB_GB: 2` in
-the log. Second, remember lesson 13's courtesy: `pitch_map` resets `fcw_r`
+four modules — nextpnr will notice the load and promote it to a global
+buffer; you'll see `promoting rst [reset] (fanout 129)` — the tool's own
+tally of the reset network — and `SB_GB: 2` in the log. Second, remember lesson 13's courtesy: `pitch_map` resets `fcw_r`
 to FCW_BASE, so the instrument wakes *playing C4* rather than sweeping up
 from DC while the first measurements arrive. R1 in the testbench is the
 whole story in one assert: within 2 ms of power-up, with no reset pin, the
 delta-sigma bitstream must already be alive.
 
-### The integration testbench is a system test
+#### The integration testbench is a system test
 
 The unit testbenches you have written probe wires a bench cannot reach.
 This one deliberately does not. `theremin_top_tb` touches the DUT only
@@ -204,7 +209,7 @@ interfaces, and you pay it *once, at the system boundary*: unit TBs remain
 your inner loop, the integration TB is the gate a change passes before you
 call it done. Regression discipline in one sentence.
 
-### The resource budget: reading your own footprint
+#### The resource budget: reading your own footprint
 
 Yosys's statistics for `theremin_top` (you'll reproduce this in Run):
 
@@ -260,7 +265,7 @@ cycle later),
 not a synthesis switch. The stat line is where you *notice*; lesson 07
 told you to read it, this is why.
 
-### The timing story
+#### The timing story
 
 Both boards place-and-route at 12 MHz with the same verdict from all three
 graders (nextpnr post-place, nextpnr post-route, icetime): about **36 MHz
@@ -274,7 +279,7 @@ argument promised. The 83.3 ns clock budget means nobody has to pipeline
 anything today; Explore 3 measures how much of that margin is real by
 asking nextpnr for 36 MHz and watching it fail honestly.
 
-## Radar Connection
+### Radar Connection
 
 This lesson is the theremin edition of the most expensive question in
 radar development: **how do you test a sensor before its world exists?**
@@ -321,7 +326,26 @@ with every serious sensor program: integration against modeled targets,
 budgets instead of vibes, and hardware bring-up as *confirmation* of a
 simulation sign-off rather than discovery.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why every module registering its output means the system's f_max is set
+  by the slowest single module cloud — and which cloud that is here, and
+  why it can afford to be lavish.
+- how the testbench predicts the audio frequency without ever reading the
+  DUT — three module contracts composed in real arithmetic — and which
+  three quantization/settling terms the ±2% tolerance budgets for.
+- where all 168 flip-flops live, module by module, and why
+  `ICESTORM_RAM` reads 0 even though lesson 07 sized the sine table for a
+  BRAM.
+- why `osc_model` is this instrument's target generator in the
+  radar sense, and why a sign-off against it is only valid inside the
+  model's envelope.
+
+---
+
+## Session 14.2 — Build the Instrument (~60 min)
+
+### Build
 
 Nine VHDL files, two constraint files, and the Makefile. Seven of the
 eleven you have already written and verified — they are reused here
@@ -1326,7 +1350,7 @@ lab day.)
 **File: course/work/lesson14/Makefile**
 
 ```make
-# Lesson 14 solutions — theremin_top integration. Usage (after sourcing
+# Lesson 14 — theremin_top integration. Usage (after sourcing
 # ~/tools/oss-cad-suite/environment):
 #
 #   make sim              end-to-end testbench (osc_model hand sweep)
@@ -1421,7 +1445,23 @@ Lesson 05's Makefile grown up. Three changes earn their keep:
   board-neutral and shared, which is also a statement: the *design* does
   not know which board it is on; only place-and-route does.
 
-## Run
+**Stopping point.** You should now be able to explain:
+
+- why the seven reused files must be byte-identical to their home lessons
+  — what integration is allowed to add (wiring), and what it is never
+  allowed to do (sneaky edits).
+- why `u_map` takes no generic map while `u_meas` sets `EDGES => 64`
+  explicitly, and what breaks if the two stop agreeing.
+- why `osc_model.vhd` lives in `SIM_SRC` and must never appear in `RTL`,
+  and what yosys would do if it leaked across that firewall.
+- why the TB's watchdog is a separate process instead of a flag check
+  inside `main`.
+
+---
+
+## Session 14.3 — Prove It: Sim, Fit, Timing (~75 min)
+
+### Run
 
 From `course/work/lesson14/` (toolchain sourced via the `fpga` alias).
 First the system test — and note it runs for several minutes of wall
@@ -1617,7 +1657,22 @@ because a bitstream configures the *die*, not the design (lesson 05's
 observation, still true). Both boards green: the pinned deliverable of
 this lesson.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why R2/R3/R4 landing 0.03–0.18% from prediction — against a 2% budget —
+  is what a healthy system looks like, and what it means that the number
+  was recovered from the 1-bit stream itself.
+- the critical path in design terms: launched from `freq_meas`'s `period`
+  register, through `pitch_map`'s map-clamp-smooth cloud, into `fcw_r` —
+  27.98 ns spent of an 83.3 ns budget, one registered boundary crossed.
+- why the hx8k bitstream is four times the iCEstick's when both hold the
+  same 495 logic cells.
+
+---
+
+## Session 14.4 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Attempt these before opening `course/solutions/lesson14/`. Each one is a
 class of integration failure, on purpose.
@@ -1683,7 +1738,7 @@ class of integration failure, on purpose.
    only instrument that detects it is the one you just used: reading the
    numbers, not the verdict. Restore 25 ms.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs / vhdl-mode: let the editor write the port maps.** In each
   module file, put point inside the entity declaration and hit
@@ -1720,7 +1775,7 @@ class of integration failure, on purpose.
   regime, few percent off). Design your failure messages for the bad day,
   during the good one.
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 99 — the lab day — you must have:
 

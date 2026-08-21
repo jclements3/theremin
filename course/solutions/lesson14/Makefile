@@ -1,4 +1,4 @@
-# Lesson 14 solutions — theremin_top integration. Usage (after sourcing
+# Lesson 14 — theremin_top integration. Usage (after sourcing
 # ~/tools/oss-cad-suite/environment):
 #
 #   make sim              end-to-end testbench (osc_model hand sweep)

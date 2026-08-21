@@ -1,7 +1,7 @@
 # Lesson 03 — numeric_std and Fixed-Point Thinking
 
-*Where we are.* You can structure a design (lesson01) and prove it works with
-a self-checking, requirement-tagged testbench (lesson02). But so far the data
+*Where we are.* You can structure a design (lesson 01) and prove it works with
+a self-checking, requirement-tagged testbench (lesson 02). But so far the data
 flowing through your designs has been bags of bits. This lesson gives those
 bits arithmetic meaning: `unsigned` and `signed` from `ieee.numeric_std`,
 what happens at the edges of a fixed word (wrap or saturate — you must
@@ -25,9 +25,13 @@ you'll know exactly why both are right.
 - Compute a hardware constant at elaboration time with `math_real` and
   explain why that's free in silicon.
 
-## Concepts
+---
 
-### Bits don't have a value until you say so
+## Session 03.1 — Wrap vs Saturate (~60 min)
+
+### Concepts
+
+#### Bits don't have a value until you say so
 
 A `std_logic_vector(7 downto 0)` holding `"11111111"` is not 255. It is not
 -1. It is eight wires. The number it represents depends on an interpretation
@@ -42,7 +46,7 @@ interpretation in the type:
 - `signed(7 downto 0)`: two's complement, `"11111111"` = -1.
 
 Declaring a port as `unsigned` is documentation the compiler enforces. You
-saw this in lesson02's counter; from here on every arithmetic signal in the
+saw this in lesson 02's counter; from here on every arithmetic signal in the
 course is `unsigned` or `signed`, and conversions to/from `std_logic_vector`
 happen only at boundaries that genuinely are just bits (a UART byte, a LED
 bus).
@@ -59,7 +63,7 @@ unsigned(slv), std_logic_vector(u)   -- free type casts, zero hardware
 The casts on the last line are legal because the types have the same shape —
 they rename the wires, nothing more.
 
-### What a fixed-width add actually builds
+#### What a fixed-width add actually builds
 
 In software, `a + b` on 64-bit integers overflows so rarely you forget it
 can. In hardware you pick the word width, so overflow is a design decision
@@ -83,7 +87,7 @@ simulation or synthesis. The adder is a ring:
 ```
 
 Sometimes the ring is exactly what you want. The NCO's phase accumulator
-(lesson04) *is* this ring: phase is inherently modular — 360° = 0° — so
+(lesson 04) *is* this ring: phase is inherently modular — 360° = 0° — so
 wrapping is the correct physics and costs nothing. That's why `nco.vhd`'s
 accumulate line is a bare `acc <= acc + fcw` with a comment celebrating the
 wrap.
@@ -103,7 +107,7 @@ Wrap vs saturate, when each is right:
 | audio samples, gains, control signals | saturate | off-scale should clip, not teleport |
 | counters you compare against a limit | either, if the limit is checked first | overflow never reached |
 
-### Saturation from first principles: keep the carry
+#### Saturation from first principles: keep the carry
 
 The W-bit add threw the carry away, and the carry is exactly the information
 "did this overflow?". So don't do a W-bit add. Do a (W+1)-bit add:
@@ -128,12 +132,12 @@ is the old carry, reborn as an ordinary signal you can inspect:
 The saturating adder is then a one-line multiplexer: if `wide(W)` is set,
 output all-ones (2**W - 1); otherwise output the low W bits. And `wide(W)`
 itself is a useful output — a `sat` flag telling downstream logic (or a
-telemetry UART, lesson11) that clipping happened. In hardware terms you've
+telemetry UART, lesson 11) that clipping happened. In hardware terms you've
 built a W+1-bit adder plus a W-wide 2:1 mux: about one extra LUT per bit
 over the plain adder. Saturation is cheap. Debugging a wrap that only
 happens when the input peaks is not.
 
-### resize(), precisely
+#### resize(), precisely
 
 `resize(x, N)` is the standard way to change a word's width, and its
 behavior is type-aware — this is where `unsigned` vs `signed` earns its
@@ -154,7 +158,7 @@ the top bit.** Grow to the exact width that makes the operation lossless
 (one extra bit per add; N+M bits for an N×M multiply), do the math exactly,
 then wrap, saturate, or round *once*, deliberately, at the output.
 
-### Why std_logic_arith is banned
+#### Why std_logic_arith is banned
 
 You will meet `use ieee.std_logic_arith.all` in legacy code and old
 tutorials. It is not an IEEE standard — it's a Synopsys package that squatted
@@ -169,7 +173,7 @@ Vendors ship it for backward compatibility only. `numeric_std` puts the
 interpretation in the type, where the compiler can check it at every
 assignment. House rule, no exceptions: `numeric_std` only.
 
-### Constants and elaboration-time math
+#### Constants and elaboration-time math
 
 Question you'll face next lesson: what frequency control word makes a 32-bit
 NCO clocked at 12 MHz produce concert A? The answer is
@@ -198,7 +202,7 @@ its limit: an elaboration-time function calls `sin()` 256 times to fill a
 ROM. This lesson's testbench uses the humbler integer form of the same idea:
 `2 ** W - 1` as a named constant, computed by the compiler, not by you.
 
-## Radar Connection
+### Radar Connection
 
 **Word growth through a signal chain.** Every DSP block in a radar grows its
 data, and somebody has to budget the bits — usually you.
@@ -229,15 +233,30 @@ phantom targets. A saturated spike is visibly clipped, flagged (your `sat`
 output is exactly this flag; real receivers count these events and report
 them in telemetry), and recoverable. Radar engineers carry a "bit-growth
 budget" spreadsheet for the whole chain the way structural engineers carry
-load tables. You'll do the miniature version in lesson10, when the frequency
+load tables. You'll do the miniature version in lesson 10, when the frequency
 counter's width sets how fine a hand movement you can resolve.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why a W-bit `numeric_std` add is arithmetic mod 2**W — the carry out of
+  the top bit does not exist in the result — and why 255+255 gives 254 in
+  8 bits.
+- why the NCO's phase accumulator *wants* that wrap while an audio sample
+  path must saturate instead.
+- how `resize`-ing both operands to W+1 bits before adding makes the sum
+  exact and turns the lost carry into an ordinary signal you can inspect.
+- why a `math_real` computation in a constant declaration costs zero gates.
+
+---
+
+## Session 03.2 — Build & Run (~60 min)
+
+### Build
 
 Create `course/work/lesson03/` and enter the two design files and the
 Makefile below. The module first — read the header comment: it declares the
 requirements R1–R3, and the testbench checks them by tag, same discipline as
-lesson02.
+lesson 02.
 
 Two things to notice while you type. First, `wide` has range `W downto 0` —
 that's W+1 bits, the guard bit at index W. Second, the output is a
@@ -410,14 +429,14 @@ implementation (a `>=` where `>` belongs, or clamping at 254). 128+128 is
 the MSB-meets-MSB case, and 255+255 is the worst case, whose wrap (254, not
 0) surprises most people the first time.
 
-The Makefile is the lesson02 pattern with two source files — analysis order
+The Makefile is the lesson 02 pattern with two source files — analysis order
 matters: `sat_add.vhd` before `sat_add_tb.vhd`, because the testbench
 instantiates `entity work.sat_add` and GHDL must have analyzed it first.
 
 **File: course/work/lesson03/Makefile**
 
 ```makefile
-# Lesson 03 solution — GHDL sim flow. Usage: make sim  (after sourcing
+# Lesson 03 — GHDL sim flow. Usage: make sim  (after sourcing
 # ~/tools/oss-cad-suite/environment). Mirrors tutorial/Makefile — same
 # flags, same shim, no synthesis targets.
 
@@ -440,7 +459,7 @@ clean:
 	rm -rf build
 ```
 
-## Run
+### Run
 
 From `course/work/lesson03/` (with the `fpga` alias already sourced in your
 shell):
@@ -477,7 +496,22 @@ read the three R2 lines against their parenthesized wrap values: 256 wraps
 to 0, 256 wraps to 0, 510 wraps to 254. That's the buzz your speaker is
 being spared.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why `wide` is declared `unsigned(W downto 0)` and what a `'1'` in bit
+  `wide(W)` says about the true sum.
+- why this testbench needs no clock, and why each `check` call advances
+  simulated time by exactly 1 ns.
+- why the testbench computes its expected values in plain integer math
+  instead of re-running the DUT's own formula.
+- why the vector pair 200+55 / 200+56 straddling 255 is the pair that
+  catches fencepost bugs in a saturation implementation.
+
+---
+
+## Session 03.3 — Explore & Checkpoint (~75 min)
+
+### Explore
 
 Do these before peeking at `course/solutions/lesson03/`.
 
@@ -509,10 +543,10 @@ Do these before peeking at `course/solutions/lesson03/`.
    `resize`-ing to W+1 bits and adding (now sign-extension does the work),
    the sum overflows W bits exactly when the top two bits of `wide`
    differ. Write four checks: big+big, -big+-big, and one in-range case of
-   each sign. This is the version the audio mixer in lesson14's chain
+   each sign. This is the version the audio mixer in lesson 14's chain
    would need if we summed voices.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **GHDL: "no declaration of operator +".** The #1 beginner error in this
   chapter. It means you're adding types that have no `+` defined — usually
@@ -524,13 +558,13 @@ Do these before peeking at `course/solutions/lesson03/`.
   `unsigned(8 downto 0) <= unsigned(7 downto 0) + ...` — the wide add in
   this lesson *requires* the explicit `resize` on both operands. Annoying
   for five minutes, then it catches your first real truncation bug and you
-  stop complaining. (VHDL's strictness is the point: lesson01's delta-cycle
+  stop complaining. (VHDL's strictness is the point: lesson 01's delta-cycle
   rules told you *when* things happen; the type system tells you *what* the
   bits mean.)
 - **Testbench math has word growth too.** `2 ** W - 1` with `W = 31`
   overflows VHDL's `integer` (guaranteed only up to 2**31 - 1), which is
   why Explore 3's last step dies at elaboration. Simulation-side integer
-  math is 32-bit — when the counters in lesson10 get wide, the testbench
+  math is 32-bit — when the counters in lesson 10 get wide, the testbench
   will compare `unsigned` values directly instead of round-tripping through
   `to_integer`.
 - **Emacs/vhdl-mode: stop indenting by hand.** After editing, `M-x
@@ -551,16 +585,16 @@ Do these before peeking at `course/solutions/lesson03/`.
   wrong sometimes" and "input stage clipped 14 times during that sweep".
   Radar telemetry does exactly this at every fixed-point boundary.
 
-## Checkpoint
+### Checkpoint
 
-Before lesson04, you must have:
+Before lesson 04, you must have:
 
 - `make sim` in `course/work/lesson03/` printing four `R1 pass`, three
   `R2 pass`, the `R3 pass` line, and the `testbench complete` line, with
   zero `FAIL` lines.
 - Explore 1 done: you've seen the wrapping adder fail exactly the three R2
   vectors, and can state from memory what 255+255 wraps to in 8 bits.
-- A one-sentence answer to: why does `nco.vhd` (lesson04) *want* its
+- A one-sentence answer to: why does `nco.vhd` (lesson 04) *want* its
   accumulator to wrap, while this adder must not?
 - The rule internalized: resize to exact width, do the math losslessly,
   then wrap/saturate/round once, deliberately, at the output.

@@ -1,4 +1,4 @@
-# Lesson 11 solution — uart_tx + decoding testbench. Usage: make sim
+# Lesson 11 — uart_tx + decoding testbench. Usage: make sim
 # (after sourcing ~/tools/oss-cad-suite/environment). Mirrors
 # tutorial/Makefile — same flags, same shim. No synthesis targets:
 # uart_tx joins a top-level build only if you wire it in yourself

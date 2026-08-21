@@ -1,4 +1,4 @@
-# Lesson 13 solutions — pitch_map. Usage: make sim
+# Lesson 13 — pitch_map. Usage: make sim
 # (after sourcing ~/tools/oss-cad-suite/environment). Mirrors
 # tutorial/Makefile — same flags, same shim. No synthesis targets:
 # pitch_map is synthesized as part of theremin_top in lesson14, not here.

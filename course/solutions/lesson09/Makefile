@@ -1,4 +1,4 @@
-# Lesson 09 solution: 2-FF synchronizer. Usage: make sim  (after sourcing
+# Lesson 09 — 2-FF synchronizer. Usage: make sim  (after sourcing
 # ~/tools/oss-cad-suite/environment). Mirrors fpga/phase1/Makefile in
 # miniature — same flags, same shim, no synthesis targets.
 

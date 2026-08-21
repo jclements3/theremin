@@ -9,7 +9,11 @@ sample, plus the resistor and capacitor that turn that average into volts.
 It is the last new block on the output side of the chain — from lesson 09
 onward we turn around and work on the input side, the antenna.
 
-## Objectives
+---
+
+## Session 08.1 — Scheduling Ones (~75 min)
+
+### Objectives
 
 - Explain why a digital pin plus an analog low-pass filter is a DAC.
 - Derive PWM from first principles, then articulate precisely why
@@ -23,9 +27,9 @@ onward we turn around and work on the input side, the antenna.
   the testbench pins down a mean with a hard tolerance and no golden
   trace.
 
-## Concepts
+### Concepts
 
-### A pin and a capacitor is a DAC
+#### A pin and a capacitor is a DAC
 
 A digital pin driving an RC low-pass filter produces, at the capacitor,
 the *average* of what the pin did over the last few RC time constants.
@@ -38,7 +42,7 @@ leftover wiggle — the *ripple* — sits at frequencies the RC attenuates
 into irrelevance." Every 1-bit DAC is a scheduling policy. There are two
 classic policies.
 
-### Policy 1: PWM
+#### Policy 1: PWM
 
 The obvious schedule: chop time into frames of 2^W clocks (256 for
 W = 8), drive the pin high for `sample` clocks per frame, low for the
@@ -61,7 +65,7 @@ frame — 12-bit PWM at 12 MHz frames at 2.9 kHz, inside the audio band.
 PWM couples resolution to frame rate because it insists on delivering the
 ones in one contiguous burst. That contiguity buys nothing. Drop it.
 
-### Policy 2: spread the ones — delta-sigma
+#### Policy 2: spread the ones — delta-sigma
 
 Same 64-ones-per-256-clocks budget, different schedule: deal the ones out
 as evenly as possible.
@@ -76,7 +80,7 @@ Identical average — but the ripple fundamental moved from 46.875 kHz to
 the same single-pole RC, free. The error energy did not shrink; it was
 *relocated* to where the filter is strong. That is noise shaping.
 
-### The error-feedback loop
+#### The error-feedback loop
 
 The machine that produces the evenly-spread schedule is one accumulator.
 First, map the signed sample into **offset binary** — plain unsigned
@@ -122,7 +126,7 @@ from x/2^W by less than **1/N** — not "statistically", bounded, for every
 N, every x, every starting state. Hold that bound; it is the foundation of
 the testbench.
 
-### You have already built this machine
+#### You have already built this machine
 
 Look again: an accumulator that adds a constant every clock and emits its
 overflow — lesson 04's phase accumulator. A first-order error-feedback
@@ -131,7 +135,7 @@ the sample: the carry fires at rate x/2^W per clock, which is
 `f_out = fcw · f_clk / 2^W` read as a pulse density. Lesson 04 called
 x/2^W a pitch; today it is a voltage. Same identity, one adder.
 
-### Where the noise goes
+#### Where the noise goes
 
 Rewrite the per-clock identity as a signal statement:
 
@@ -165,7 +169,7 @@ is small. Run the same loop at 1 MHz, or at W = 16, and tones land
 in-band and you need dither or a higher-order loop. Explore 4 audits this
 arithmetic.
 
-### The RC that turns bits into volts
+#### The RC that turns bits into volts
 
 Now the analog half, with lab-day values. To pass: the theremin's pitch
 range is clamped (lesson 13) to C3–C6, sine fundamental at most
@@ -194,7 +198,7 @@ that is a 16 Hz high-pass; the lowest note is 130 Hz) — and the amp
 input impedance must be ≥10× the final R or it re-tunes the filter. Mark
 all values "tune on bench" per lesson 99 custom.
 
-### Verifying a scheduling policy: the mean-tracking testbench
+#### Verifying a scheduling policy: the mean-tracking testbench
 
 What should the TB check? Not the exact bit pattern — a golden trace,
 brittle and mute about *why*. The contract is R1: *for a DC input held
@@ -215,7 +219,7 @@ is the reset check, done with malice: full-scale positive sample applied
 reset must clear the accumulator and mask the input, not merely zero the
 output once.
 
-## Radar Connection
+### Radar Connection
 
 This lesson is the transmitter chapter of a radar education, in miniature.
 
@@ -245,7 +249,24 @@ This lesson is the transmitter chapter of a radar education, in miniature.
   levels: switches are efficient and linear things are expensive, so
   compute in time, filter in analog.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why delta-sigma's error energy is no smaller than PWM's, and why
+  relocating it to frequencies where the RC is strong is what makes a
+  single pin a usable DAC.
+- how the telescoping sum bounds the ones-density error by 1/N — for
+  every N, every input, every starting residual, not statistically.
+- why the quantization error is the first difference of a bounded
+  residual sequence, and how that shape buys ~1.5 bits of in-band
+  resolution per doubling of the oversampling ratio.
+- why every idle tone this modulator can produce at W = 8 and 12 MHz
+  lands at or above 46.875 kHz — ultrasonic by arithmetic, not by luck.
+
+---
+
+## Session 08.2 — Building the Modulator (~60 min)
+
+### Build
 
 Three files, byte-for-byte the reference implementation in
 `course/solutions/lesson08/` — which you should resist opening until you
@@ -489,7 +510,7 @@ Dissection:
 **File: course/work/lesson08/Makefile**
 
 ```make
-# Lesson 08 solution — minimal GHDL sim flow. Usage: make sim  (after
+# Lesson 08 — minimal GHDL sim flow. Usage: make sim  (after
 # sourcing ~/tools/oss-cad-suite/environment). Mirrors fpga/phase1/Makefile
 # in miniature — same flags, same shim, no synthesis targets.
 
@@ -517,7 +538,7 @@ with the glibc shim, run. Sim-only: `dsm_dac` reaches silicon inside
 `theremin_top` in lesson 14. No `--wave=` on the run line this time;
 Explore 2 adds it back temporarily.
 
-## Run
+### Run
 
 From `course/work/lesson08/` (toolchain environment sourced — the `fpga`
 alias from lesson 00):
@@ -549,7 +570,25 @@ residual telescopes to precisely zero over the window — and
 visible in a log line. Timestamps check out too: five 4096-clock windows
 plus resets ≈ 20 500 clocks at 83.333 ns ends at 1.708 ms.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why the `'0' &` zero-extend is load-bearing — how it forces a
+  (W+1)-bit sum so the carry lands in bit W instead of silently
+  wrapping away.
+- why `bit_out <= acc(W)` is glitch-free with no extra register, and
+  why adding one "for safety" would only buy latency.
+- why every measured mean in the log is *exactly* the expected value —
+  each test point's bit pattern has a period dividing 4096, so the
+  residual telescopes to precisely zero over the window.
+- why the TB pins down a mean with a hard tolerance instead of diffing
+  a golden bit trace, and where the 2% bound's two orders of margin
+  come from.
+
+---
+
+## Session 08.3 — Break, Probe, Audit (~60 min)
+
+### Explore
 
 Attempt these before opening `course/solutions/lesson08/`.
 
@@ -586,7 +625,7 @@ Attempt these before opening `course/solutions/lesson08/`.
    f_clk < 5.12 MHz). We clock at 12 MHz — now you know the *margin* on
    the claim, not just the claim.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs / vhdl-mode:** after hand-editing alignment-sensitive code like
   the TB's constant block, run `M-x vhdl-beautify-buffer` (bound to
@@ -614,7 +653,7 @@ Attempt these before opening `course/solutions/lesson08/`.
   the 1 kΩ R and you've built a 10:1 attenuator and moved the cutoff.
   Check the amp's input impedance before blaming the VHDL.
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 09 you must have:
 

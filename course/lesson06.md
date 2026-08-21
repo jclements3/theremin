@@ -1,7 +1,7 @@
 # Lesson 06 — Sequencers and Control
 
-*Where we are.* You can generate a tone (the NCO, lesson04) and you've
-turned one into a bitstream that drones A440 forever (lesson05). A drone
+*Where we are.* You can generate a tone (the NCO, lesson 04) and you've
+turned one into a bitstream that drones A440 forever (lesson 05). A drone
 is a data path with nobody in charge. This lesson builds the *control* — a
 sequencer stepping the NCO's frequency control word through a C-major
 scale, half a second per note, forever. The parts are humble — a timer, an
@@ -23,7 +23,11 @@ through, both legitimate:
   `NOTE_CLKS - 1`, what the constrained subtype buys, and what each
   testbench check probes. The Explore exercises are new either way.
 
-## Objectives
+---
+
+## Session 06.1 — Timers, Tables, and the Fencepost (~75 min)
+
+### Objectives
 
 - Build a dwell timer from a counter, a compare, and a reload, and state
   exactly why the terminal count is `NOTE_CLKS - 1`, not `NOTE_CLKS`.
@@ -37,9 +41,9 @@ through, both legitimate:
 - Place sequencers in the theremin/radar picture: control plane vs data
   plane, and where this structure returns later in the course.
 
-## Concepts
+### Concepts
 
-### Control plane, data plane
+#### Control plane, data plane
 
 The NCO is a data-path block: arithmetic every cycle, no idea what note
 it's playing — you park a number on `fcw` and it integrates. Everything
@@ -62,12 +66,12 @@ Strip any scheduler to its skeleton and you find three parts:
 A timer measuring the dwell, an index naming the current step, a table
 mapping step to output. `scale_seq` is the cleanest possible instance. So
 is a UART transmitter (baud timer, bit index, the byte as the table —
-lesson11). So is a stepped-frequency radar's waveform scheduler (see Radar
+lesson 11). So is a stepped-frequency radar's waveform scheduler (see Radar
 Connection). Learn the skeleton once, recognize it everywhere.
 
-### A timer is a counter with an opinion
+#### A timer is a counter with an opinion
 
-You built free-running counters in lesson02. A timer is a counter plus a
+You built free-running counters in lesson 02. A timer is a counter plus a
 decision: count clocks, compare against a terminal value, and on the clock
 where the compare hits, reload to zero and emit a tick. The entire
 subtlety is the terminal value.
@@ -95,9 +99,9 @@ with a post every 10 meters has 11 posts, not 10. You will make it for the
 rest of your career; the discipline is making it in simulation, against a
 testbench that counts.
 
-### The index counter and the free wrap
+#### The index counter and the free wrap
 
-The index is a 3-bit `unsigned`. From lesson03 you know exactly what
+The index is a 3-bit `unsigned`. From lesson 03 you know exactly what
 `idx + 1` does at 7: wraps to 0, mod 2**3, silently. Here the silence is
 the feature — eight notes, eight states, so C5 rolls back to C4 with zero
 comparison logic. The wrap is *free precisely because the table length
@@ -107,10 +111,10 @@ don't exist (in simulation, a bounds crash; see Tips). A sequence length
 that isn't a power of two needs an explicit compare-and-clear, same shape
 as the timer's. We got lucky on purpose.
 
-### The note table: elaboration-time math, again
+#### The note table: elaboration-time math, again
 
 Each note needs the `fcw` that makes a 32-bit NCO at `CLK_HZ` produce its
-equal-temperament frequency — lesson04's formula, `round(f · 2³² / f_clk)`.
+equal-temperament frequency — lesson 04's formula, `round(f · 2³² / f_clk)`.
 Eight magic numbers you could paste in from a calculator. Don't. Lesson03
 showed the better way: make the toolchain do the arithmetic at
 elaboration time.
@@ -144,7 +148,7 @@ eight entries cost nothing). `fcw` changes the same cycle `idx` does; the
 testbench's "sampled a few clocks in" slack exists so a registered-output
 variant would also pass. Both are valid; ours takes the cheap one.
 
-### Reading the grader: what each R check probes
+#### Reading the grader: what each R check probes
 
 The testbench is reused **verbatim** from `fpga/phase1/tb/scale_seq_tb.vhd`
 and it, not the lesson text, is the authoritative spec. For each tag, find
@@ -159,7 +163,7 @@ Order is checked by walking an unwrapped `expected` counter through 16
 note transitions — two full traversals, so the 7→0 wrap is exercised
 twice — comparing `idx` against `expected mod 8` at every step. Notice the
 guard before the arithmetic — `assert fcw(31 downto 20) = 0` — that's
-lesson03's word-growth discipline applied to the *testbench*: `to_integer`
+lesson 03's word-growth discipline applied to the *testbench*: `to_integer`
 on a 32-bit unsigned with high bits set would overflow VHDL's integer and
 kill the sim with a confusing error, so the TB checks its own precondition
 and fails with a message naming the actual problem.
@@ -192,7 +196,7 @@ hangs and broken preconditions are `severity failure`, which under the
 Makefile's `--assert-level=failure` aborts the run, because nothing after
 them means anything.
 
-### Constrained subtypes: exact hardware, free assertions
+#### Constrained subtypes: exact hardware, free assertions
 
 The timer is declared
 
@@ -212,7 +216,7 @@ real hardware instead crashes the sim on the exact increment that went
 out of range. VHDL's much-mocked strictness, doing free verification
 again.
 
-## Radar Connection
+### Radar Connection
 
 **Stepped-frequency ladders.** A stepped-frequency continuous-wave (SFCW)
 radar builds a high-resolution range profile without a wideband receiver:
@@ -221,7 +225,7 @@ frequency ladder, then process the per-step phase samples (an IFFT across
 steps) into a synthetic range profile. The waveform scheduler that runs
 that ladder is — structurally, exactly — `scale_seq`: a table of DDS
 control words (the ladder instead of a scale), a dwell timer, a wrapping
-step index feeding an NCO (lesson04 told you the NCO *is* a DDS). Rename
+step index feeding an NCO (lesson 04 told you the NCO *is* a DDS). Rename
 `note_idx` to `step_idx` and you could ship it.
 
 The lesson's details all map:
@@ -251,7 +255,27 @@ Lesson12 closes the loop — two NCOs and a mixer show why this theremin
 *is* a CW radar. The sequencer you just built is the part such a radar
 uses to choose its transmit frequency.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why a timer that must hold each note for exactly `NOTE_CLKS` cycles
+  reloads at `NOTE_CLKS - 1`, not `NOTE_CLKS` — zero is a state too, and
+  a compare against `NOTE_CLKS` occupies one state too many.
+- why the 3-bit index wraps 7→0 with zero comparison logic, and exactly
+  when that free wrap stops being safe (a table whose length is not
+  2**bits).
+- how `note_fcw`'s `math_real` arithmetic runs at elaboration time and
+  never reaches the netlist — and which limit (VHDL's 32-bit simulation
+  integer) bounds the trick.
+- for each of R1–R4, which testbench mechanism supplies the teeth: the
+  independent frequency table, the counted `while` loop asserting
+  `cnt = NOTE_CLKS` exactly, the mid-sequence reset, and the pause that
+  falls inside R2's counted window.
+
+---
+
+## Session 06.2 — Build and First Green (~90 min)
+
+### Build
 
 Create `course/work/lesson06/` and enter the files below. Build path: type
 in the entity and header comment, stop, implement the architecture from
@@ -520,7 +544,7 @@ begin
 end architecture sim;
 ```
 
-The Makefile is lesson03's plus two additions: the run line records a
+The Makefile is lesson 03's plus two additions: the run line records a
 waveform (`--wave=build/scale_seq_tb.ghw`, GHDL's native GHW format), and
 a `wave` target that opens it. The leading `-` on the recursive
 `make sim` tells make to continue even if the sim exits nonzero — a
@@ -559,7 +583,7 @@ clean:
 	rm -rf build
 ```
 
-## Run
+### Run
 
 From `course/work/lesson06/` (with the `fpga` alias already sourced in your
 shell):
@@ -599,7 +623,25 @@ upward, snapping back down at each 7→0 wrap; the flat shelf where `en`
 drops is R4, and the cliff back to the bottom step at the second `rst`
 pulse is R3.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why the process checks `rst` before `en` — reset must win even while
+  paused — and why everything under one `elsif en = '1'` is all of R4:
+  timer, index, and (since `fcw` is a pure function of `idx`) both
+  outputs frozen at once.
+- why the Makefile's `wave` target puts a `-` in front of its recursive
+  `make sim` — a failing assert is exactly when you want the waveform to
+  open, not be skipped.
+- why the R1/R2 reports landing at ~136 µs is the right order of
+  magnitude, and why the rounded `CLK_PER = 83.333 ns` can't create a
+  phantom failure — every check counts edges, none measures wall-clock
+  time.
+
+---
+
+## Session 06.3 — Break It on Purpose (~60 min)
+
+### Explore
 
 Do these before peeking at `course/solutions/lesson06/` — especially on
 the review path.
@@ -650,7 +692,7 @@ the review path.
    `freq_meas` gates): make time constants generic, verify scaled, ship
    full-rate.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Reset priority is a requirement, not a style choice.** `rst` is tested
   before `en`, so reset works while paused. Swap the nesting
@@ -669,7 +711,7 @@ the review path.
   funnels through `integer(round(...))`; our largest fcw is ~187,000,
   fine. Reuse the trick for a 6 MHz ladder step and the intermediate
   exceeds 2**31 − 1: elaboration dies with an overflow, GHDL naming the
-  line. Same word-growth rule as lesson03's testbench tip — elaboration
+  line. Same word-growth rule as lesson 03's testbench tip — elaboration
   integers don't grow just because your hardware words did.
 - **Emacs/vhdl-mode: let the mode manage sensitivity lists.**
   `M-x vhdl-update-sensitivity-list-buffer` rescans each process and
@@ -683,9 +725,9 @@ the review path.
   as 0–7 and `fcw` as an integer, no radix fiddling. VCD flattens types
   to bit vectors; use GHW unless another tool forces VCD on you.
 
-## Checkpoint
+### Checkpoint
 
-Before lesson07, you must have:
+Before lesson 07, you must have:
 
 - `make sim` in `course/work/lesson06/` printing the four `R* pass` lines
   and `scale_seq testbench complete`, with zero `FAIL` lines.

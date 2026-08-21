@@ -7,14 +7,18 @@ an HX1K, and makes timing at 12 MHz with 3× margin. You have never touched
 hardware — by design: nothing gets flashed that hasn't been simulated, and
 now everything has been. Today, at the lab machine, you replace
 `osc_model.vhd` with physics: a 74HC14, a handful of passives, and a rod of
-aluminium. Four acts: set up the lab machine, flash lesson05's A440 as a
+aluminium. Four acts: set up the lab machine, flash lesson 05's A440 as a
 smoke test, bring up the analog oscillator, then flash `theremin_top` and
 tune it until it plays. From here on the outputs that matter appear on a
 scope screen and in the air, not in a terminal — this lesson describes
 them and marks them **observe on bench** instead of pretending to quote
 them.
 
-## Objectives
+---
+
+## Session 99.1 — From Model to Bench (~60 min)
+
+### Objectives
 
 - Set up a fresh lab machine — pinned toolchain, udev rule, and (on WSL2)
   the usbipd USB bridge — and prove it with a flashed A440 bitstream.
@@ -27,9 +31,9 @@ them.
 - Diagnose the four classic bring-up failures — no tone, wrong pitch,
   jittery pitch, no USB device — using the signal chain as a fault tree.
 
-## Concepts
+### Concepts
 
-### What changes today
+#### What changes today
 
 Simulation answered "is the design right?" The bench asks "is *this
 assembly* of design, board, breadboard, cabling, and room right?" — and
@@ -45,10 +49,10 @@ Two habits carry the day:
    troubleshooting table in Run is ordered so each check isolates one
    link of the chain.
 
-### Who may touch the USB port
+#### Who may touch the USB port
 
 The boards talk to the PC through an FTDI FT2232H: channel A wired to the
-iCE40's SPI configuration interface, channel B to spare pins (lesson11's
+iCE40's SPI configuration interface, channel B to spare pins (lesson 11's
 UART, if you extend the design). `iceprog` speaks raw USB to that chip —
 no serial-port driver — which is why two pieces of plumbing live in
 `fpga/setup/`:
@@ -67,10 +71,10 @@ The dev machine (no Windows admin rights, so no usbipd-win) could never do
 this — the machine split from `fpga/ROADMAP.md`, and the reason today
 happens at the lab bench.
 
-### The 74HC14 relaxation oscillator
+#### The 74HC14 relaxation oscillator
 
 The last black box in the project is the one `osc_model.vhd` has been
-impersonating since lesson10. A 74HC14 is six inverters with
+impersonating since lesson 10. A 74HC14 is six inverters with
 **Schmitt-trigger** inputs: the switching threshold depends on direction —
 rising inputs must pass V_T+ before the output falls; falling inputs must
 pass the lower V_T− before it rises. That hysteresis gap is what makes a
@@ -109,9 +113,9 @@ to the room joins C, a hand approaching the rod adds ~0.1–1 pF more (a few
 pF nearly touching), and f drops in proportion. The hand is one plate of a
 capacitor, the rod the other — the physics claim the course opened with.
 
-### Choosing the values
+#### Choosing the values
 
-Work backwards from what the digital side was pinned to in lesson13:
+Work backwards from what the digital side was pinned to in lesson 13:
 nominal oscillator 200 kHz, so `freq_meas` (EDGES = 64) reports
 P_REF = 64 · 12 MHz / 200 kHz = 3840 counts and `pitch_map` outputs
 FCW_BASE — C4. Budget the node capacitance first:
@@ -137,7 +141,7 @@ oscillator — otherwise the FPGA pin, its jumper wire, and any scope probe
 hang directly on the timing node and detune it. And the chip runs from the
 board's **3.3 V** pin: the iCE40's I/O bank is 3.3 V and not 5 V-tolerant.
 
-### Tuning: what mistuning sounds like
+#### Tuning: what mistuning sounds like
 
 The mapping is linear: fcw = FCW_BASE + (P_REF − period)·2⁶. Feel out its
 sensitivity with two numbers you can now derive yourself:
@@ -160,7 +164,7 @@ The measurement side updates at 200 kHz/64 ≈ 3 kHz with a ~2.7 ms
 smoothing constant, so tuning feels instantaneous; nothing digital changes
 today.
 
-## Radar Connection
+### Radar Connection
 
 Today is integration and test, and every radar program has this day —
 usually several months of it, on an outdoor range, with more paperwork.
@@ -184,7 +188,7 @@ The moves you're making map one-to-one:
   right to debug only analog problems today, but it never claimed to be
   the room.
 - **Fault isolation along the chain.** The troubleshooting table works
-  because lesson14 registered every module boundary: each interface is an
+  because lesson 14 registered every module boundary: each interface is an
   observable, so a failure bisects to one block — the same test-point-by-
   test-point discipline that debugs a radar chain from antenna to display.
 
@@ -192,7 +196,23 @@ And the instrument itself is the radar: a CW oscillator coupled into
 space, a target modulating the return, a frequency measurement turning
 that modulation into an output. The Epilogue makes this literal.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- Why the A440 bitstream goes on before `theremin_top` — what the smoke
+  test proves, and which class of fault (digital vs analog) is left if it
+  sings.
+- Why a Schmitt trigger's hysteresis gap is what makes a one-gate RC
+  oscillator possible, and why the 0.8 in f ≈ 1/(0.8·R·C) is a typical
+  value to tune on the bench, not a spec.
+- Why a hand's ~1 pF on a ~62 pF node moves the pitch about 0.7 semitone,
+  and why a 2.5% error in the free-running frequency sounds about a
+  semitone flat.
+
+---
+
+## Session 99.2 — Lab Machine and Smoke Test (~75 min)
+
+### Build
 
 **No new files.** Lesson99 adds zero VHDL — the whole point. You flash
 the bitstreams you already verified in `course/work/lesson05/` (A440) and
@@ -206,7 +226,7 @@ harness skips this lesson's extraction step explicitly — there is no
 - The board (iCEstick, or HX8K-B-EVN — see Tips for its jumper caveat),
   USB cable, breadboard, jumpers.
 - 74HC14 (HC, not HCT); 82 kΩ, 50 kΩ trimmer, 100 Ω, 1 kΩ; 47 pF
-  (C0G/NP0), 100 nF decoupling, 33 nF for the audio RC (lesson08's
+  (C0G/NP0), 100 nF decoupling, 33 nF for the audio RC (lesson 08's
   filter: 1 kΩ series + 33 nF to ground ≈ 4.8 kHz corner) and ~1 µF to
   AC-couple into the amplified speaker, and the smoke-test piezo.
   Lesson08's optional second stage (10 kΩ + 3.3 nF) if hiss bothers you.
@@ -250,19 +270,19 @@ Wiring notes, each one a lesson learned the annoying way:
   current if the pin is ever misconfigured.
 - Share grounds: 74HC14, board, and audio must be one net — a floating
   ground is the classic jittery, hum-modulated pitch.
-- FPGA-side pins come from the lesson14 PCFs (`osc_in` pin 79 sits next to
+- FPGA-side pins come from the lesson 14 PCFs (`osc_in` pin 79 sits next to
   `audio_out` 78 on the iCEstick's J2 PMOD, which also provides 3.3 V and
   GND rails). On the HX8K, verify B1/B2 against the board schematic before
   wiring — the PCF comment says so.
 
-## Run
+### Run
 
 Act 0 runs anywhere on the lab machine; acts 1–3 assume the `fpga` alias
 has been run in this shell and `cwd` is the named work directory. Hardware
 results are prose marked **observe on bench** — quoting a fake success
 would defeat the point of the day.
 
-### Act 0 — lab machine setup
+#### Act 0 — lab machine setup
 
 Bring the repo over (git remote, rsync, or a USB stick — you need
 `course/` and `fpga/` intact, your `course/work/` dirs, and
@@ -275,8 +295,14 @@ tar xzf ~/Downloads/oss-cad-suite-linux-x64-20260820.tgz
 echo "alias fpga='source ~/tools/oss-cad-suite/environment'" >> ~/.bashrc
 ```
 
+Expected output:
+
+```text
+(no output on success)
+```
+
 (The tarball is the dated 2026-08-20 release from YosysHQ's
-oss-cad-suite-build releases page; `tar` prints nothing on success.
+oss-cad-suite-build releases page.
 Pinned tools mean a bitstream built here is the one you simulated there.)
 Check whether the lab machine needs the glibc shim:
 
@@ -293,18 +319,30 @@ ldd (Ubuntu GLIBC 2.35-0ubuntu3.14) 2.35
 (That's the dev machine's line; yours names its own version. If it reports
 ≥ 2.38 you can skip the shim — the Makefiles pass it unconditionally and a
 prebuilt `.o` is harmless either way.) If < 2.38, compile the shim you
-copied over — silent on success:
+copied over:
 
 ```bash
 gcc -c -O2 -fPIC -o ~/tools/glibc-isoc23-shim.o ~/tools/glibc-isoc23-shim.c
 ```
 
-USB permissions, both machine types (silent on success; replug the board
-afterwards so the rule applies):
+Expected output:
+
+```text
+(no output on success)
+```
+
+USB permissions, both machine types (replug the board afterwards so the
+rule applies):
 
 ```bash
 sudo cp fpga/setup/53-lattice-ftdi.rules /etc/udev/rules.d/
 sudo udevadm control --reload
+```
+
+Expected output:
+
+```text
+(no output on success)
 ```
 
 **Native-Ubuntu lab machine:** that's it — plug the board in and go to
@@ -331,7 +369,7 @@ on later runs it attaches and proves WSL sees the chip — **observe on
 bench**: `lsusb` showing an `0403:` device, then
 `OK — 'make prog' should work now.`
 
-### Act 1 — smoke test: flash lesson05's A440
+#### Act 1 — smoke test: flash lesson 05's A440
 
 Sim before hardware, even today — thirty seconds of ritual that rules out
 a damaged toolchain install. From `course/work/lesson05/`:
@@ -406,7 +444,22 @@ RC needed for a square smoke test) sounds concert A. Check with a tuner
 app: 440 Hz ± a few tenths. A440 plus heartbeat proves the entire digital
 path; put the piezo aside.
 
-### Act 2 — bring up the oscillator
+**Stopping point.** You should now be able to explain:
+
+- Why the udev rule is a one-time install (plus one replug) while a WSL2
+  machine must rerun `attach-fpga.sh` after every cable event.
+- Why A440 at 440 Hz plus the heartbeat LED proves the entire
+  toolchain-to-board digital path, so every later failure today is analog.
+- Why the pinned toolchain release reproduces lesson 05's exact LC count
+  and max-frequency numbers on a different machine on a different day.
+
+---
+
+## Session 99.3 — Oscillator Bring-Up and Tuning (~90 min)
+
+### Run — continued
+
+#### Act 2 — bring up the oscillator
 
 Wire the Build schematic, but **don't connect the FPGA jumper yet** — the
 oscillator gets verified alone first (one variable at a time). Power it
@@ -426,7 +479,7 @@ pulls the frequency ~14%, so you'd be tuning to the probe):
 Only then connect the buffered output through the 100 Ω to `osc_in`, and
 move the audio path from piezo to 1 kΩ → RC → amplifier.
 
-### Act 3 — flash theremin_top and tune
+#### Act 3 — flash theremin_top and tune
 
 From `course/work/lesson14/`, the full ritual — sim, build, timing, flash:
 
@@ -474,7 +527,7 @@ Total number of logic levels: 94
 Total path delay: 27.98 ns (35.74 MHz)
 ```
 
-(`make BOARD=hx8k bit` for the big board — lesson14's Makefile keeps
+(`make BOARD=hx8k bit` for the big board — lesson 14's Makefile keeps
 per-board `.bin` names, so no clean is needed between boards.) Then:
 
 ```bash
@@ -497,7 +550,7 @@ heartbeat — and a tone. Now tune:
    near the bench is part of the calibration, as is temperature.
 
 Listen for the smoothing: pitch glides rather than steps, because fcw
-closes 1/8 of the remaining error per measurement at ~3 kHz — lesson13's
+closes 1/8 of the remaining error per measurement at ~3 kHz — lesson 13's
 2.7 ms alpha filter, audible as portamento.
 
 **Troubleshooting.** Work the rows in order; each isolates one link.
@@ -510,7 +563,24 @@ closes 1/8 of the remaining error per measurement at ~3 kHz — lesson13's
 | Pitch jittery / warbles / hums | Ground and coupling | Does the jitter track mains hum (100/120 Hz flutter)? Does the pitch shift when you touch ground? | Common ground for board, 74HC14, and amp; shorten node-N wiring; move the antenna away from mains cables and the scope's own supply; decoupling cap actually across pins 14/7. Last resort: increase C_base (less sensitivity, less jitter — the alpha-filter trade in analog form). |
 | `Can't find iCE FTDI USB device` | USB plumbing | `lsusb` show `0403:6010`? | Native: udev rule installed? replugged since? WSL2: rerun `setup/attach-fpga.sh` — attachment is lost on every replug. |
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- Why the oscillator is verified alone, at the buffer output, before the
+  FPGA jumper is connected — and why probing node N would mean tuning the
+  instrument to the scope probe.
+- Why trimming the open-hand tone to C4 is the same act as steering
+  `period` to exactly P_REF = 3840.
+- Why the troubleshooting table can bisect a fault to one block: lesson
+  14 registered every module boundary, so each interface is an
+  observable.
+- Why the pitch glides rather than steps — where the ~2.7 ms portamento
+  comes from in lesson 13's smoothing.
+
+---
+
+## Session 99.4 — Explore, Exit Criteria, and the Radar Epilogue (~75 min)
+
+### Explore
 
 No solutions directory to peek at today — the bench is the answer key.
 
@@ -530,14 +600,14 @@ No solutions directory to peek at today — the bench is the answer key.
 3. **See the note being made.** Scope `audio_out` before the RC (a blur
    of 1-bit switching) and after it (a stepped sine); if your scope has
    FFT, watch the fundamental slide as you play with the delta-sigma
-   noise pushed up and away — lesson08's noise shaping, live.
+   noise pushed up and away — lesson 08's noise shaping, live.
 4. **Calibrate the model.** Measure free-run f, then f with your hand at
    10 cm, 2 cm, touching. Convert each to an equivalent `hand` value of
    `osc_model` (BASE_HZ 200 kHz, DELTA_HZ 20 kHz) and judge whether the
-   lesson14 testbench swept a realistic range. That is target-model
+   lesson 14 testbench swept a realistic range. That is target-model
    validation with range data.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **3.3 V, always.** The 74HC14 runs happily at 3.3 V (thresholds scale
   with V_CC). Powering it at 5 V makes a healthier-looking square wave and
@@ -558,9 +628,9 @@ No solutions directory to peek at today — the bench is the answer key.
   with temperature and voltage and are microphonic — in a circuit whose
   job is turning tiny capacitance changes into pitch, a capacitor that
   sings along is a failure mode.
-- **lesson05's build artifacts don't encode BOARD** (lesson14's do): on
+- **lesson 05's build artifacts don't encode BOARD** (lesson 14's do): on
   the HX8K, `make clean` before `make BOARD=hx8k bit` in `lesson05/`, or
-  you'll flash an HX1K bitstream at it — the lesson05 trap, now with
+  you'll flash an HX1K bitstream at it — the lesson 05 trap, now with
   hardware attached.
 - **usbipd attachment is per-plug**: every cable event on a WSL2 machine
   means rerunning `fpga/setup/attach-fpga.sh` before `make prog`. The
@@ -570,15 +640,15 @@ No solutions directory to peek at today — the bench is the answer key.
   `iceprog`'s output landing in the compile buffer — a one-key
   edit-to-hardware loop for the Explore experiments.
 
-## Checkpoint
+### Checkpoint
 
 The course's exit criteria — all bench facts, all yours now:
 
 - The lab machine builds and flashes: `make sim` in `course/work/lesson05/`
-  prints the lesson04/05 output verbatim, `make bit` reaches
+  prints the lesson 04/05 output verbatim, `make bit` reaches
   `Info: Program finished normally.`, `make prog` ends in `VERIFY OK`,
   and the heartbeat LED blinks afterwards.
-- The A440 smoke test sounded, and a tuner app agreed with lesson05's
+- The A440 smoke test sounded, and a tuner app agreed with lesson 05's
   FCW arithmetic to within a hertz.
 - The 74HC14 oscillator free-runs within trimmer reach of 200 kHz and
   slides smoothly down as a hand approaches the rod — both facts measured
@@ -590,7 +660,7 @@ The course's exit criteria — all bench facts, all yours now:
   fault (Explore 2 counts) and can say which module boundary each row
   tests.
 
-## Epilogue — the same chain, real radar
+### Epilogue — the same chain, real radar
 
 One evening's perspective before the breadboard goes back in the drawer:
 on the shopping list sits an **HB100**, a $6 X-band Doppler module — a
@@ -598,20 +668,20 @@ on the shopping list sits an **HB100**, a $6 X-band Doppler module — a
 against the transmitted carrier. It is a theremin with the wavelength
 turned down: where your antenna's near field is perturbed by a hand's
 capacitance, the HB100 illuminates the room and mixes the reflection with
-its own carrier — lesson12's heterodyne, in hardware, against a moving
+its own carrier — lesson 12's heterodyne, in hardware, against a moving
 target. Its IF output is the Doppler difference: about 70 Hz per m/s of
 target speed — *audio*, a signal your chain already handles. Comparator
 into `osc_in`, and `sync_2ff → freq_meas` measures speed instead of hand
-position; add `uart_tx` (lesson11) and plot walking speeds at your desk.
+position; add `uart_tx` (lesson 11) and plot walking speeds at your desk.
 Same pipeline. Real radar. That demo, per `fpga/ROADMAP.md` Phase 7, is
 the artifact this course was quietly building toward.
 
 The limits you'll hit with it are the next course's syllabus — roadmap
 Phases 5 and 6. A single mixer can't tell approaching from receding
-(lesson12's image problem): fixing that takes a quadrature NCO and I/Q
+(lesson 12's image problem): fixing that takes a quadrature NCO and I/Q
 downconversion — the **DDC** at the front of every modern receiver. One
 tone at a time won't separate two targets: that takes a **serial radix-2
-FFT**, where lesson10's dwell-versus-resolution tradeoff returns as CPI
+FFT**, where lesson 10's dwell-versus-resolution tradeoff returns as CPI
 design. And a fixed detection threshold fails when the room changes:
 that's **CA-CFAR**, P_fa from first principles. Those designs want the
 ECP5 on a ULX3S — same open toolchain, same Makefiles, three letters

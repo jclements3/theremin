@@ -14,7 +14,11 @@ classic defect that passes every simulation and every bench test, then
 corrupts data once a week in the field, unreproducibly. This lesson is
 where you learn to never write one.
 
-## Objectives
+---
+
+## Session 09.1 — Metastability by the Numbers (~60 min)
+
+### Objectives
 
 - Explain metastability from the physics: what the setup/hold window
   really is, why sampling a moving signal can leave a flop balanced
@@ -28,9 +32,9 @@ where you learn to never write one.
   fundamentally cannot; build `sync_2ff` and its self-checking testbench
   and pass all checks.
 
-## Concepts
+### Concepts
 
-### What a flip-flop actually is
+#### What a flip-flop actually is
 
 Every clocked process you have written so far had its inputs produced by
 other clocked processes on the *same* clock — the timing tools (icetime,
@@ -77,7 +81,7 @@ probability the flop is *still* undecided after a wait t_r is:
 P(still metastable after t_r) = e^(-t_r / τ)
 ```
 
-### MTBF: putting numbers on the failure
+#### MTBF: putting numbers on the failure
 
 Two questions: how often does a flop get hit, and how long does it need
 to recover? A data edge causes trouble only if it lands inside the
@@ -128,7 +132,7 @@ resolve time. One clock period of patience buys more margin than the
 lifetime of the cosmos: that is the entire theoretical content of the
 two-flip-flop synchronizer.
 
-### The 2-FF synchronizer
+#### The 2-FF synchronizer
 
 The pattern writes itself: let the first flop take the metastability hit,
 and let no one look at it for one full period. The only "anyone" allowed
@@ -166,7 +170,7 @@ downstream that assumes the latency is fixed. (In lesson 10 it becomes ±1
 count of period-measurement noise — quantifiable, budgetable, harmless.
 That's the trade you want.)
 
-### The CDC rules of the road
+#### The CDC rules of the road
 
 The 2-FF pattern is safe *only* inside a discipline. These rules are what
 a CDC signoff tool mechanically checks and what a DO-254 reviewer will
@@ -205,7 +209,7 @@ ask you to demonstrate. Learn them as law:
    analyzer doesn't demand the impossible. A constraints topic, not RTL;
    at 12 MHz on an iCE40 our flow needs none of it.
 
-### What simulation can and cannot verify
+#### What simulation can and cannot verify
 
 The uncomfortable fact this lesson must not hide: **RTL simulation
 cannot exhibit metastability.** GHDL's flip-flop is ideal — no aperture,
@@ -223,7 +227,7 @@ exactly 2: the allowance encodes the hardware coin flip simulation
 cannot show. Write the check the *silicon* must pass, not the check the
 simulator happens to pass.
 
-## Radar Connection
+### Radar Connection
 
 **Every ADC and sensor interface you will ever touch is a clock-domain
 crossing.** This is the least optional lesson in the course for a radar
@@ -254,7 +258,27 @@ engineer.
   rather than test them. The proof here is two paragraphs of arithmetic
   in Concepts. Cheap insurance.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why sampling a signal that is in transition during the aperture window
+  can latch a flip-flop balanced between states, and why the probability
+  it is still undecided after a wait t_r is e^(-t_r/τ).
+- how MTBF = e^(t_r/τ) / (T_W·f_clk·f_data) is assembled from a hit rate
+  and a survival probability — and why, at 12 MHz with a 200 kHz async
+  input, one clock period of resolve time turns ~480 metastable events
+  per second into an MTBF beyond the age of the universe.
+- why a 2-FF synchronizer does not remove uncertainty about when an edge
+  is captured, but converts "invalid voltage anywhere in my logic" into
+  "clean value, ±1 cycle of timestamp ambiguity" — permanently.
+- why a bus must never cross a domain bit-wise, and what a Gray-coded
+  counter or a synchronized-valid handshake provides that per-bit
+  synchronizers cannot.
+
+---
+
+## Session 09.2 — Building the Border Checkpoint (~75 min)
+
+### Build
 
 Three files. Solutions live in `course/solutions/lesson09/` — type the
 code in rather than copying, and resist peeking until you've attempted
@@ -510,7 +534,7 @@ Dissection:
 **File: course/work/lesson09/Makefile**
 
 ```make
-# Lesson 09 solution: 2-FF synchronizer. Usage: make sim  (after sourcing
+# Lesson 09 — 2-FF synchronizer. Usage: make sim  (after sourcing
 # ~/tools/oss-cad-suite/environment). Mirrors fpga/phase1/Makefile in
 # miniature — same flags, same shim, no synthesis targets.
 
@@ -537,7 +561,7 @@ asserts tell the whole story (add `--wave=build/$(TB).ghw` to the run
 line to see the shift in GTKWave). Analysis order still matters:
 `sync_2ff.vhd` before the TB that instantiates it.
 
-## Run
+### Run
 
 From `course/work/lesson09/` (with the toolchain environment sourced —
 the `fpga` alias from lesson 00 does this):
@@ -564,7 +588,25 @@ in the `-Wl` line will match your machine.) Sanity-check the timestamp:
 100 ns offset + 120 × 599 ns of toggling + 4 clock periods of flush =
 72,313,332 ps ≈ 72.3 µs.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- why `meta_ff <= async_in; sync_ff <= meta_ff;` inside one clocked
+  process builds two flip-flops in series rather than one flop with
+  renamed wires — and why variables there would have collapsed it to a
+  single wire.
+- how the testbench models asynchrony with number theory: what the
+  coprime 83,333 ps / 599,000 ps intervals and the 100 ns offset each
+  buy, and which simulator fiction the offset refuses to test against.
+- why `check_r1` enforces both a ceiling (within 3 edges) and a floor
+  (`assert e >= 2`), and which distinct defect each bound catches.
+- why the TB accepts a transition in 2 *or* 3 edges even though
+  simulation always delivers exactly 2.
+
+---
+
+## Session 09.3 — Break It on Purpose (~60 min)
+
+### Explore
 
 Attempt these before peeking at anything in `course/solutions/`.
 
@@ -601,7 +643,7 @@ Attempt these before peeking at anything in `course/solutions/`.
    the cliff is sharp once t_r shrinks to tens of τ, and that cliff is
    why vendors publish characterized τ instead of letting you guess.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Emacs / vhdl-mode:** `M-x vhdl-beautify-buffer` re-indents and
   re-aligns the whole file in one stroke — run it after hand-editing
@@ -629,7 +671,7 @@ Attempt these before peeking at anything in `course/solutions/`.
   You can't — the header explains why — and "I applied the pattern
   without thinking" is exactly what CDC reviews exist to catch.
 
-## Checkpoint
+### Checkpoint
 
 Before lesson 10 you must have:
 

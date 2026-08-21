@@ -8,12 +8,16 @@ be hardware. This lesson, the pretending stops: you will push that NCO
 through synthesis, place-and-route, and bitstream packing, and end holding a
 `top.bin` that would make an iCEstick sing concert A through a piezo. You
 won't flash it yet — the boards live on the lab bench, and flashing is
-lesson99's opening act — but the file you build today is the exact one
+lesson 99's opening act — but the file you build today is the exact one
 you'll program then. The point of the lesson is that nothing between your
 VHDL and that file is magic: four tools, each with one job, each leaving an
 inspectable text file behind.
 
-## Objectives
+---
+
+## Session 05.1 — The Flow on Paper (~60 min)
+
+### Objectives
 
 - Name the four tools in the flow — yosys, nextpnr, icepack, icetime — and
   state what each consumes and produces.
@@ -26,9 +30,9 @@ inspectable text file behind.
 - Build the A440 bitstream for both course boards and read the two timing
   reports that decide whether it's allowed to exist.
 
-## Concepts
+### Concepts
 
-### A compiler with three back ends
+#### A compiler with three back ends
 
 You know this shape from software: compiler → linker → loader, each stage
 narrowing "what I meant" toward "what the machine executes". The FPGA flow
@@ -63,7 +67,7 @@ does something you don't expect, you can always open the artifact and look.
 No black boxes — the course rule, enforced by the toolchain's own file
 formats.
 
-### What the fabric offers: the iCE40 logic cell
+#### What the fabric offers: the iCE40 logic cell
 
 Synthesis needs a target vocabulary. The iCE40's is small enough to learn
 completely. The atom is the **logic cell (LC)**:
@@ -76,14 +80,14 @@ completely. The atom is the **logic cell (LC)**:
   adders don't burn a whole LUT per carry.
 
 The iCEstick's HX1K has 1280 LCs; the HX8K breakout has 7680. Both also
-have block RAMs (16 and 32 — lesson07's territory), a PLL, and I/O cells.
+have block RAMs (16 and 32 — lesson 07's territory), a PLL, and I/O cells.
 In yosys output these appear as `SB_`-prefixed primitives (SiliconBlue, the
 startup Lattice bought): `SB_LUT4`, `SB_CARRY`, `SB_DFF` and its variants,
 `SB_IO`, `SB_GB` (a global buffer — the dedicated low-skew network your
 clock rides on). Your entire design is about to be re-expressed in that
 vocabulary and nothing else.
 
-### Stage 1: yosys, with GHDL as its front end
+#### Stage 1: yosys, with GHDL as its front end
 
 Yosys is a Verilog synthesizer; our VHDL enters through the
 `ghdl-yosys-plugin`, which embeds the same GHDL you've been simulating with
@@ -104,10 +108,10 @@ registers onto the `SB_DFF` family.
 
 Note what is *not* in the command: the testbench. `nco_tb.vhd` is full of
 `wait for`, `report`, file I/O of waveforms — meaningful to a simulator,
-meaningless as hardware. The RTL/TB split you've kept since lesson02 is
+meaningless as hardware. The RTL/TB split you've kept since lesson 02 is
 exactly the synthesizable/unsynthesizable split.
 
-### Reading the stat report
+#### Reading the stat report
 
 Near the end of the log, `synth_ice40` prints statistics — the parts list.
 For this design:
@@ -131,7 +135,7 @@ report shows 24 + 4 + 31 = 59. Map them:
 | 4 × `SB_DFFE` | `por_cnt` | the `if por_cnt /= x"F"` guard became a clock **e**nable |
 | 31 × `SB_DFFSR` | `acc` | our synchronous reset became the **s**ynchronous-**r**eset flop |
 
-The house style you've been following since lesson01 — synchronous
+The house style you've been following since lesson 01 — synchronous
 active-high resets, clock enables instead of gated clocks — is precisely
 the style that maps 1:1 onto this cell family. That's not a coincidence;
 the style exists because this is what fabrics provide.
@@ -147,9 +151,9 @@ The rest: 53 `SB_CARRY` cells carry the three adders (the 31 live bits of
 `acc + fcw`, the 24-bit `hb_cnt` increment, the 4-bit `por_cnt`); 60
 `SB_LUT4`s hold the add logic, the mux-with-reset in front of each DFFSR,
 and the `por_cnt /= x"F"` comparison. Zero block RAMs — remember that line;
-in lesson07 it's the line you'll be watching.
+in lesson 07 it's the line you'll be watching.
 
-### Stage 2: the PCF — names to pins
+#### Stage 2: the PCF — names to pins
 
 The netlist says `top` has ports `clk12`, `audio_out`, `led_hb`. The board
 says the 12 MHz can arrives at package pin 21. Nothing connects those two
@@ -172,7 +176,7 @@ picking a pin for you (Explore exercise 1 shows you the message), and why
 `hx8k.pcf` ships with a comment ordering you to verify the audio ball
 against the schematic before trusting it.
 
-### Stage 3: nextpnr — the netlist meets geometry
+#### Stage 3: nextpnr — the netlist meets geometry
 
 ```
 nextpnr-ice40 --hx1k --package tq144 --pcf icestick.pcf \
@@ -188,9 +192,9 @@ period, 83.3 ns. The placer and router optimize against that number, the
 final report grades it — `PASS` or the build errors out. You'll see the
 `Max frequency` line twice: once after placement (an estimate) and once
 after routing (real wire delays). Watch the utilisation block too: this
-design uses 5% of an HX1K. By lesson14 that number is a budget.
+design uses 5% of an HX1K. By lesson 14 that number is a budget.
 
-### Stages 4 and 5: icepack, and icetime as the gate
+#### Stages 4 and 5: icepack, and icetime as the gate
 
 `icepack` is the boring one, deliberately: `top.asc` (ASCII bits) in,
 `top.bin` (binary bits in configuration-load order) out, no decisions
@@ -211,7 +215,7 @@ until temperature or voltage shifts the margins, and then it fails in ways
 simulation can never show you. Timing closure is a *proof obligation*, like
 the testbench, not a benchmark.
 
-For this design the critical path is exactly where lesson04 said the cost
+For this design the critical path is exactly where lesson 04 said the cost
 of a wide accumulator lives: a carry chain. Look at the report you'll
 generate: it enters at `u_nco.acc[1]`, ripples carry-to-carry up all ~30
 live accumulator bits (0.126 ns per bit — the dedicated carry path earning
@@ -219,7 +223,7 @@ its keep), and lands on the `audio_out` flop's setup: 31 logic levels,
 6.19 ns, fmax 161 MHz. At 12 MHz we have a 13× margin. Enjoy it; the
 integration lesson will spend some of it.
 
-### top.vhd: the power-on-reset
+#### top.vhd: the power-on-reset
 
 `top.vhd` is small, but it answers a question the testbench never had to
 face: who drives `rst`? In simulation, the TB did. The boards have no reset
@@ -230,9 +234,9 @@ GHDL. So `top.vhd` builds a reset out of that guarantee: `por_cnt` wakes at
 0, counts to 15, and sticks (its enable — the `SB_DFFE`s you counted —
 turns off at `x"F"`); `rst` is asserted while it counts. Fifteen clean
 clock cycles of synchronous reset after configuration, then the design runs
-forever. This exact pattern reappears in `theremin_top` in lesson14.
+forever. This exact pattern reappears in `theremin_top` in lesson 14.
 
-The other thing `top.vhd` shows is lesson03's discipline paying off:
+The other thing `top.vhd` shows is lesson 03's discipline paying off:
 `FCW_A440` is 157482 because round(440 × 2³² / 12 MHz) = 157482, giving
 439.9996 Hz — an error of 0.4 millihertz, three orders of magnitude below
 the ~1 Hz a trained ear can resolve at A4. The header comment shows the derivation,
@@ -241,7 +245,7 @@ is the classic hello-world of FPGA bring-up: bit 23 of a free-running
 counter blinks at 12 MHz/2²⁴ ≈ 0.72 Hz, proving clock, configuration, and
 at least one flop are alive even if audio is silent.
 
-## Radar Connection
+### Radar Connection
 
 **Why sensor front ends are FPGAs and not CPUs or GPUs.** The stat report
 you just read is the whole argument, if you read it the right way. Those 59
@@ -268,7 +272,7 @@ its paperwork in your hands: `icetime` PASS at 12 MHz is a worst-case
 guarantee — every path, every cycle, over temperature and voltage, no
 scheduler, no interrupts, no cache. The CPU-world equivalent (worst-case
 execution time analysis) is so hard that hard-real-time engineers routinely
-pad estimates by an order of magnitude. When lesson10 builds the frequency
+pad estimates by an order of magnitude. When lesson 10 builds the frequency
 counter, its measurement dwell will be exact to the clock cycle for the
 same reason — and when a radar signal processor promises a Doppler filter
 output every CPI, this is the machinery keeping the promise.
@@ -277,12 +281,27 @@ The price of determinism is also on your screen: place-and-route took
 longer than every GHDL run so far combined, for 65 LCs — big designs take
 hours per iteration. And the fabric is a fixed budget: 1280 LCs is 1280
 LCs, budgeted like mass and power on an airframe. That's why the
-utilisation block is in every build log, and why lesson14 tracks it.
+utilisation block is in every build log, and why lesson 14 tracks it.
 
-## Build
+**Stopping point.** You should now be able to explain:
+
+- why `top.json` is a parts list and wiring diagram rather than an
+  instruction stream — everything on it exists and switches simultaneously.
+- which of `top.vhd`'s three registers maps to which `SB_DFF` flavor, and
+  why constant propagation leaves `acc` with 31 flip-flops instead of 32.
+- why nextpnr makes an unconstrained top-level port a hard error when it
+  could trivially pick a pin — what a wrong `set_io` claim is a claim about.
+- why determinism, not raw throughput, is what puts an FPGA between the
+  antenna and the CPU — and which report line is the paperwork proving it.
+
+---
+
+## Session 05.2 — Building the Bitstream (~75 min)
+
+### Build
 
 Create `course/work/lesson05/`. Six files this time: two you already have
-(`nco.vhd` and `nco_tb.vhd` are byte-identical to lesson04's — copy them
+(`nco.vhd` and `nco_tb.vhd` are byte-identical to lesson 04's — copy them
 in), one new design file, two PCFs, and a Makefile that grows synthesis
 targets. The NCO first, unchanged — the point of module reuse is that a
 verified file travels whole:
@@ -557,7 +576,7 @@ set_io led_hb B5   # D2 (LED bank: B5 B4 A2 A1 C5 C4 B3 C3)
 set_io audio_out B1
 ```
 
-The Makefile is lesson03's sim pattern plus the four synthesis rules from
+The Makefile is lesson 03's sim pattern plus the four synthesis rules from
 the Concepts diagram, written as real `make` dependencies: `bit` needs
 `.bin`, which needs `.asc`, which needs `.json` and the PCF, which needs
 the RTL. Change one VHDL file and `make bit` reruns exactly the stages
@@ -647,7 +666,7 @@ clean:
 	rm -rf build
 ```
 
-## Run
+### Run
 
 From `course/work/lesson05/` (with the `fpga` alias already sourced in this
 shell). Simulation first — always. Nothing gets synthesized in this course
@@ -675,7 +694,7 @@ nco_tb.vhd:114:5:@19724630434500fs:(report note): NCO testbench complete (any FA
 
 (Same conventions as before: `mkdir -p build` appears only on the first
 run, and your home directory replaces `/home/clementsj` in the shim path.
-This is lesson04's exact output — same NCO, same TB.)
+This is lesson 04's exact output — same NCO, same TB.)
 
 Now synthesis. Yosys prints a few hundred lines; the excerpt below is the
 part you must learn to find and read — the statistics:
@@ -752,7 +771,7 @@ is post-routing truth; exact MHz values wobble slightly across nextpnr
 versions but both must say `PASS at 12.00 MHz`. The 65 LCs are yosys's
 LUTs, flops, and carries packed together into whole logic cells.)
 `build/top.bin` now exists: 32,220 bytes of would-be A440. It stays on disk
-until lesson99 — `make prog` is in the Makefile, but there's no board on
+until lesson 99 — `make prog` is in the Makefile, but there's no board on
 this machine to program.
 
 The independent timing verdict:
@@ -844,7 +863,25 @@ builds (~32 KB vs ~135 KB): a bitstream's size tracks the *device*, not the
 design, because it configures every cell on the die including the idle
 ones.
 
-## Explore
+**Stopping point.** You should now be able to explain:
+
+- the flip-flop accounting in your own synthesis log — why the stat block
+  reads 24 + 4 + 31, where each group lives in the source, and why the
+  house style of synchronous resets and clock enables maps 1:1 onto the
+  `SB_DFF` family.
+- why the critical path is the accumulator's carry chain — what the
+  metronomic 0.126 ns `carryin -> carryout` steps in the icetime report
+  are, and why 6.19 ns against an 83.3 ns budget means a 13× margin.
+- why two independent timing graders can disagree by a few MHz and why the
+  rule is that both must PASS at 12 MHz, trusting the lower number.
+- why `top.bin` is ~32 KB on the HX1K and ~135 KB on the HX8K for the same
+  65-LC design — what a bitstream's size actually tracks.
+
+---
+
+## Session 05.3 — Explore & Checkpoint (~60 min)
+
+### Explore
 
 Attempt these before opening `course/solutions/lesson05/`.
 
@@ -859,7 +896,7 @@ Attempt these before opening `course/solutions/lesson05/`.
 2. **The synthesizer reads your constants.** Predict, then measure, the
    `SB_DFFSR` count for two variants of `FCW_A440`: (a) 157483 — one off,
    audibly identical, but odd; (b) 314964 — exactly double, A880, one
-   octave up (lesson04's frequency equation is linear in fcw). Hint: write
+   octave up (lesson 04's frequency equation is linear in fcw). Hint: write
    both numbers in binary and count trailing zeros. Run
    `make clean && make synth` for each and check the stat block. You should
    find 32 flops for (a) and 30 for (b), against the shipped 31 — constant
@@ -882,7 +919,7 @@ Attempt these before opening `course/solutions/lesson05/`.
    ten years ago this file format was a trade secret. This inspectability
    is what "no black boxes" buys you at the hardware level.
 
-## Tips & Pitfalls
+### Tips & Pitfalls
 
 - **Switching boards? `make clean` first.** The build artifacts don't
   encode `BOARD` in their names, so after an iCEstick build,
@@ -898,7 +935,7 @@ Attempt these before opening `course/solutions/lesson05/`.
   unit) usually means analysis order or a stale `build/`: the plugin's
   `ghdl` command analyzes `$(RTL)` left to right into `build/`, so
   `nco.vhd` must precede `top.vhd` in the Makefile's `RTL` list — same
-  rule as lesson03's `SRC`. When in doubt, `make clean`: the `.cf` library
+  rule as lesson 03's `SRC`. When in doubt, `make clean`: the `.cf` library
   file in `build/` is shared between simulation and synthesis and can hold
   stale units.
 - **Two fmax numbers is normal; three graders is the point.** nextpnr's
@@ -907,16 +944,16 @@ Attempt these before opening `course/solutions/lesson05/`.
   them says PASS at your clock. Trust the lowest.
 - **The stat report prints twice** (once "Local Count", once "design
   hierarchy" totals). For our single flattened top they're identical;
-  from lesson07 onward, read the hierarchy section.
+  from lesson 07 onward, read the hierarchy section.
 - **Don't run `make prog` today.** It's wired up and it will happily wait
   forever for an iCEstick that isn't there. Flashing — and the udev/usbipd
-  plumbing it needs — is lesson99's material.
+  plumbing it needs — is lesson 99's material.
 
-## Checkpoint
+### Checkpoint
 
-Before lesson06, you must have:
+Before lesson 06, you must have:
 
-- `make sim` in `course/work/lesson05/` printing the lesson04 outputs
+- `make sim` in `course/work/lesson05/` printing the lesson 04 outputs
   unchanged: `R2 pass`, four `R1 pass` lines, `R3 pass`, zero FAILs.
 - `make bit` completing with `Info: Program finished normally.`, a
   utilisation block showing 65/1280 LCs, and both nextpnr `Max frequency`
