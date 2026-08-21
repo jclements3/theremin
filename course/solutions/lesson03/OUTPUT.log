@@ -1,0 +1,12 @@
+ghdl -a --std=08 --workdir=build sat_add.vhd sat_add_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/sat_add_tb sat_add_tb
+./build/sat_add_tb --assert-level=failure
+sat_add_tb.vhd:76:9:@1ns:(report note): R1 pass: 10+20 -> sum=30 sat=0
+sat_add_tb.vhd:76:9:@2ns:(report note): R1 pass: 0+0 -> sum=0 sat=0
+sat_add_tb.vhd:76:9:@3ns:(report note): R1 pass: 255+0 -> sum=255 sat=0
+sat_add_tb.vhd:76:9:@4ns:(report note): R1 pass: 200+55 -> sum=255 sat=0
+sat_add_tb.vhd:71:9:@5ns:(report note): R2 pass: 200+56 -> sum=255 sat=1 (a plain 8-bit add would wrap to 0)
+sat_add_tb.vhd:71:9:@6ns:(report note): R2 pass: 128+128 -> sum=255 sat=1 (a plain 8-bit add would wrap to 0)
+sat_add_tb.vhd:71:9:@7ns:(report note): R2 pass: 255+255 -> sum=255 sat=1 (a plain 8-bit add would wrap to 254)
+sat_add_tb.vhd:94:5:@7ns:(report note): R3 pass: all checks settled with no clock (combinational DUT)
+sat_add_tb.vhd:95:5:@7ns:(report note): sat_add testbench complete: R1-R3 checked (any FAILs are listed above)

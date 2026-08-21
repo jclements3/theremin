@@ -1,0 +1,9 @@
+ghdl -a --std=08 --workdir=build osc_model.vhd freq_meas.vhd freq_meas_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/freq_meas_tb freq_meas_tb
+./build/freq_meas_tb --assert-level=failure
+freq_meas_tb.vhd:89:9:@642624989718fs:(report note): R1 pass: hand=0.0 period=3840 expected~=3.84e3
+freq_meas_tb.vhd:89:9:@1298958312550fs:(report note): R2 pass: hand=2.5e-1 period=3938 expected~=3.9384615384615386e3
+freq_meas_tb.vhd:89:9:@1972624968438fs:(report note): R3 pass: hand=5.0e-1 period=4043 expected~=4.0421052631578946e3
+freq_meas_tb.vhd:89:9:@2683541623730fs:(report note): R4 pass: hand=1.0 period=4267 expected~=4.266666666666667e3
+freq_meas_tb.vhd:112:5:@2683541623730fs:(report note): freq_meas testbench complete (any FAILs are listed above)
+simulation finished @2683541623730fs

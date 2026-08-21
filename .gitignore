@@ -1,5 +1,7 @@
 # Generated build artifacts (ghdl/yosys/nextpnr outputs, waveforms)
 build/
+course/work/
 *.ghw
 *.o
 work-obj*.cf
+.claude/settings.local.json

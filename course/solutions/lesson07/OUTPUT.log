@@ -1,0 +1,8 @@
+ghdl -a --std=08 --workdir=build sine_lut.vhd sine_lut_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/sine_lut_tb sine_lut_tb
+./build/sine_lut_tb --wave=build/sine_lut_tb.ghw --assert-level=failure
+sine_lut_tb.vhd:73:5:@85292325500fs:(report note): R1 pass: peaks 127 / -127 within 1 LSB of full scale 127
+sine_lut_tb.vhd:88:5:@85292325500fs:(report note): R2 pass: quarter symmetry exact over 512 phases
+sine_lut_tb.vhd:102:5:@85292325500fs:(report note): R3 pass: sign symmetry exact over 512 phases
+sine_lut_tb.vhd:125:5:@85542324500fs:(report note): R4 pass: registered output, exactly one clock of latency
+sine_lut_tb.vhd:127:5:@85542324500fs:(report note): sine_lut testbench complete (any FAILs are listed above)

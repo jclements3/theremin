@@ -1,0 +1,9 @@
+ghdl -a --std=08 --workdir=build count8.vhd count8_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/count8_tb count8_tb
+./build/count8_tb --assert-level=failure
+count8_tb.vhd:52:5:@125999500fs:(report note): R4 pass: synchronous reset clears count to 0
+count8_tb.vhd:65:5:@959329500fs:(report note): R1 pass: count follows 1,2,...,10 - one increment per enabled clock
+count8_tb.vhd:79:5:@1459327500fs:(report note): R3 pass: en='0' holds count at 10
+count8_tb.vhd:97:5:@21959245500fs:(report note): R2 pass: 255 -> 0 wrap (mod-256 arithmetic)
+count8_tb.vhd:109:5:@22292577500fs:(report note): R4 pass: reset overrides enable mid-count
+count8_tb.vhd:112:5:@22292577500fs:(report note): count8 testbench complete: R1-R4 checked (any FAILs are listed above)

@@ -1,0 +1,7 @@
+ghdl -a --std=08 --workdir=build sync_2ff.vhd sync_2ff_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/sync_2ff_tb sync_2ff_tb
+./build/sync_2ff_tb --assert-level=failure
+sync_2ff_tb.vhd:109:5:@72313332ps:(report note): R1 pass: 120/120 async transitions reached sync_out in 2-3 clk edges
+sync_2ff_tb.vhd:118:5:@72313332ps:(report note): R1 pass: no glitches - sync_out transition count matches async_in (120)
+sync_2ff_tb.vhd:121:5:@72313332ps:(report note): R2 pass: all 120 sync_out transitions occurred on rising clk edges
+sync_2ff_tb.vhd:124:5:@72313332ps:(report note): sync_2ff testbench complete (any FAILs are listed above)

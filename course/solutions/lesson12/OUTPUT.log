@@ -1,0 +1,8 @@
+ghdl -a --std=08 --workdir=build nco.vhd het_mixer.vhd het_mixer_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/het_mixer_tb het_mixer_tb
+./build/het_mixer_tb --assert-level=failure
+het_mixer_tb.vhd:148:5:@23893446092500fs:(report note): R1 measured beat period = 2.66e1 dumps = 2.2698575872 ms (beat ~= 4.405562735032895e2 Hz, 11 crossings)
+het_mixer_tb.vhd:157:5:@23893446092500fs:(report note): R1 pass: beat period within 5% of expected 2.6633545421063996e1 dumps (440 Hz)
+het_mixer_tb.vhd:190:5:@29184341595500fs:(report note): R2 dc level = 256 counts (min=255 max=259, full scale 1024)
+het_mixer_tb.vhd:198:5:@29184341595500fs:(report note): R2 pass: equal frequencies give constant if_out (no beat), spread = 4 <= 64 counts
+het_mixer_tb.vhd:201:5:@29184341595500fs:(report note): het_mixer testbench complete (any FAILs are listed above)

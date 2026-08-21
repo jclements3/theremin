@@ -1,0 +1,16 @@
+ghdl -a --std=08 --workdir=build uart_tx.vhd uart_tx_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/uart_tx_tb uart_tx_tb
+./build/uart_tx_tb --assert-level=failure
+uart_tx_tb.vhd:148:5:@34931554720fs:(report note): R4 pass: txd idles high out of reset
+uart_tx_tb.vhd:117:7:@117424471272fs:(report note): R1 pass: start/stop framing ok (byte 0x55)
+uart_tx_tb.vhd:122:7:@117424471272fs:(report note): R2 pass: decoded payload 0x55 matches
+uart_tx_tb.vhd:152:5:@121707846500fs:(report note): R3 pass: busy rose on accept and fell after the stop bit
+uart_tx_tb.vhd:117:7:@204257457272fs:(report note): R1 pass: start/stop framing ok (byte 0x00)
+uart_tx_tb.vhd:122:7:@204257457272fs:(report note): R2 pass: decoded payload 0x00 matches
+uart_tx_tb.vhd:117:7:@291090443272fs:(report note): R1 pass: start/stop framing ok (byte 0xFF)
+uart_tx_tb.vhd:122:7:@291090443272fs:(report note): R2 pass: decoded payload 0xFF matches
+uart_tx_tb.vhd:158:5:@321415485165fs:(report note): R4 pass: txd idles high between frames
+uart_tx_tb.vhd:117:7:@403923325272fs:(report note): R1 pass: start/stop framing ok (byte 0xA5)
+uart_tx_tb.vhd:122:7:@403923325272fs:(report note): R2 pass: decoded payload 0xA5 matches
+uart_tx_tb.vhd:163:5:@434248367165fs:(report note): R3 pass: stb while busy ignored (payload intact, nothing queued)
+uart_tx_tb.vhd:165:5:@434248367165fs:(report note): uart_tx testbench complete (any FAILs are listed above)

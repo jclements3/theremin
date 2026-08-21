@@ -1,0 +1,5 @@
+ghdl -a --std=08 --workdir=build hello.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/hello_tb hello_tb
+./build/hello_tb --assert-level=failure
+hello.vhd:14:5:@0ms:(report note): Hello, world - GHDL simulation is alive.
+hello.vhd:18:5:@0ms:(report note): hello_tb complete: 1 check passed.

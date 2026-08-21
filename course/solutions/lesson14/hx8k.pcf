@@ -1,0 +1,8 @@
+# Lattice iCE40-HX8K-B-EVN breakout (iCE40-HX8K, CT256) — theremin_top
+# clk12/led_hb/audio_out match fpga/phase1/constraints/hx8k.pcf.
+set_io clk12     J3   # 12 MHz oscillator
+set_io led_hb    B5   # D2 (LED bank: B5 B4 A2 A1 C5 C4 B3 C3)
+set_io audio_out B1   # J2 header — series 1k -> RC filter -> amp
+# osc_in: J2 header ball next to audio_out; as with audio_out, VERIFY the
+# ball name against the HX8K-B-EVN schematic silk before wiring the bench.
+set_io osc_in    B2   # 74HC14 relaxation oscillator output

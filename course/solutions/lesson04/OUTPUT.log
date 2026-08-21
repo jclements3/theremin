@@ -1,0 +1,10 @@
+ghdl -a --std=08 --workdir=build nco.vhd nco_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/nco_tb nco_tb
+./build/nco_tb --wave=build/nco_tb.ghw --assert-level=failure
+nco_tb.vhd:92:5:@125999500fs:(report note): R2 pass: reset clears phase
+nco_tb.vhd:77:7:@1667034998500fs:(report note): R1 pass: fcw=700 edges=214 expected~=2.13623046875e2
+nco_tb.vhd:77:7:@3333944997500fs:(report note): R1 pass: fcw=1024 edges=313 expected~=3.125e2
+nco_tb.vhd:77:7:@3339528308500fs:(report note): R1 pass: fcw=32768 edges=32 expected~=3.2e1
+nco_tb.vhd:77:7:@19723712771500fs:(report note): R1 pass: fcw=1 edges=3 expected~=3.0
+nco_tb.vhd:112:5:@19724630434500fs:(report note): R3 pass: clock-enable holds phase
+nco_tb.vhd:114:5:@19724630434500fs:(report note): NCO testbench complete (any FAILs are listed above)

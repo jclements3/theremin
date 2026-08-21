@@ -1,0 +1,15 @@
+ghdl -a --std=08 --workdir=build pitch_map.vhd pitch_map_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/pitch_map_tb pitch_map_tb
+./build/pitch_map_tb --assert-level=failure
+pitch_map_tb.vhd:125:5:@2875988500fs:(report note): R1 pass: reset preloads FCW_BASE and period=3840 holds fcw=93640
+pitch_map_tb.vhd:145:7:@52959121500fs:(report note): R2 pass: period=3200 fcw=134600 (exact, decreasing)
+pitch_map_tb.vhd:145:7:@103042254500fs:(report note): R2 pass: period=3400 fcw=121800 (exact, decreasing)
+pitch_map_tb.vhd:145:7:@153125387500fs:(report note): R2 pass: period=3600 fcw=109000 (exact, decreasing)
+pitch_map_tb.vhd:145:7:@203208520500fs:(report note): R2 pass: period=3800 fcw=96200 (exact, decreasing)
+pitch_map_tb.vhd:145:7:@253291653500fs:(report note): R2 pass: period=4000 fcw=83400 (exact, decreasing)
+pitch_map_tb.vhd:145:7:@303374786500fs:(report note): R2 pass: period=4200 fcw=70600 (exact, decreasing)
+pitch_map_tb.vhd:145:7:@353457919500fs:(report note): R2 pass: period=4400 fcw=57800 (exact, decreasing)
+pitch_map_tb.vhd:160:5:@436874252500fs:(report note): R3 pass: period=16777215 clamps fcw at FCW_MIN=46820
+pitch_map_tb.vhd:174:5:@520290585500fs:(report note): R3 pass: period=1 stays unclamped at default slope (fcw=339336), clamps at FCW_MAX=374561 with SHIFT=8
+pitch_map_tb.vhd:210:5:@623790171500fs:(report note): R4 pass: step to period=4040 converged exactly to fcw=80840 in 60 measurements, first step partial
+pitch_map_tb.vhd:215:5:@623790171500fs:(report note): pitch_map testbench complete (any FAILs are listed above)

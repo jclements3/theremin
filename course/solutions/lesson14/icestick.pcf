@@ -1,0 +1,6 @@
+# Lattice iCEstick (iCE40-HX1K, TQ144) — theremin_top
+# clk12/led_hb/audio_out match fpga/phase1/constraints/icestick.pcf.
+set_io clk12     21   # 12 MHz FTDI-derived oscillator
+set_io led_hb    99   # D1 (red)
+set_io audio_out 78   # PMOD J2 pin 1 — series 1k -> RC filter -> amp
+set_io osc_in    79   # PMOD J2 pin 2 — 74HC14 relaxation oscillator output

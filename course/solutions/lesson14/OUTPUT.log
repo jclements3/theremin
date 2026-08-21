@@ -1,0 +1,10 @@
+ghdl -a --std=08 --workdir=build sync_2ff.vhd freq_meas.vhd pitch_map.vhd nco.vhd sine_lut.vhd dsm_dac.vhd theremin_top.vhd osc_model.vhd theremin_top_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/theremin_top_tb theremin_top_tb
+./build/theremin_top_tb --assert-level=failure
+theremin_top_tb.vhd:178:5:@2ms:(report note): R1 pass: delta-sigma bitstream live within 2 ms of power-up (POR self-start)
+theremin_top_tb.vhd:164:7:@38399957718934fs:(report note): R2 pass: hand=0.0 audio=2.618715198093366e2 Hz (exp~=2.616271376609802e2 Hz, fcw~=9.364e4)
+theremin_top_tb.vhd:164:7:@73429290491798fs:(report note): R3 pass: hand=5.0e-1 audio=2.259036229632388e2 Hz (exp~=2.2548790040769077e2 Hz, fcw~=8.070526315789475e4)
+theremin_top_tb.vhd:164:7:@110591956563862fs:(report note): R4 pass: hand=1.0 audio=1.8527669128438063e2 Hz (exp~=1.8533319234848017e2 Hz, fcw~=6.633333333333331e4)
+theremin_top_tb.vhd:188:5:@110591956563862fs:(report note): R5 pass: audio tracks hand monotonically: 2.618715198093366e2 > 2.259036229632388e2 > 1.8527669128438063e2 Hz
+theremin_top_tb.vhd:192:5:@110591956563862fs:(report note): theremin_top testbench complete (any FAILs are listed above)
+simulation finished @110591956563862fs

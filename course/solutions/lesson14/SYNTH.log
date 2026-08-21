@@ -1,0 +1,72 @@
+# SYNTH.log — theremin_top synthesis/PnR/timing evidence, both boards.
+# Captured from real runs of:
+#   make bit && make time                    (icestick, hx1k)
+#   make BOARD=hx8k bit && make BOARD=hx8k time
+# yosys netlist is board-independent (one stat section); nextpnr
+# utilisation and icetime summaries are per board.
+
+== yosys stat (tail of 'Printing statistics.') ==
+
+=== theremin_top ===
+
+        +----------Local Count, excluding submodules.
+        | 
+      636 wires
+     1513 wire bits
+      636 public wires
+     1513 public wire bits
+        4 ports
+        4 port bits
+        6 cells
+        6   $scopeinfo
+      820 submodules
+      228   SB_CARRY
+       33   SB_DFF
+        4   SB_DFFE
+       87   SB_DFFESR
+       44   SB_DFFSR
+      424   SB_LUT4
+
+== nextpnr device utilisation + Fmax — icestick (hx1k, tq144) ==
+
+Info: Device utilisation:
+Info: 	         ICESTORM_LC:     495/   1280    38%
+Info: 	        ICESTORM_RAM:       0/     16     0%
+Info: 	               SB_IO:       4/     96     4%
+Info: 	               SB_GB:       2/      8    25%
+Info: Max frequency for clock 'clk12$SB_IO_IN_$glb_clk': 35.86 MHz (PASS at 12.00 MHz)
+
+== icetime summary — icestick (hx1k) ==
+
+Total number of logic levels: 94
+Total path delay: 27.98 ns (35.74 MHz)
+
+== nextpnr device utilisation + Fmax — hx8k (ct256) ==
+
+Info: Device utilisation:
+Info: 	         ICESTORM_LC:     495/   7680     6%
+Info: 	        ICESTORM_RAM:       0/     32     0%
+Info: 	               SB_IO:       4/    206     1%
+Info: 	               SB_GB:       2/      8    25%
+Info: Max frequency for clock 'clk12$SB_IO_IN_$glb_clk': 36.14 MHz (PASS at 12.00 MHz)
+
+== icetime summary — hx8k ==
+
+Total number of logic levels: 96
+Total path delay: 27.43 ns (36.45 MHz)
+
+== notes ==
+
+* hx1k FITS: 495/1280 logic cells (38%), so the icestick build is real,
+  not just the hx8k. Both boards PASS icetime at 12 MHz with ~3x margin.
+* ICESTORM_RAM = 0: yosys mapped sine_lut's 2048-bit quarter table to
+  LUTs/FFs ('using FF mapping for memory theremin_top.u_lut'), not BRAM.
+  The ROM read feeds the sign-negation mux BEFORE the output register,
+  so memory_dff cannot merge the register into a synchronous read port
+  and iCE40 BRAM (which needs one) is off the table. Costs ~10% of hx1k
+  (~130 LCs; lesson07 measured 132 SB_LUT4 standalone);
+  acceptable here, and a good lesson14 discussion point (lesson07 covers
+  the stat line to check).
+* Critical path (icetime, both boards): inside u_map (pitch_map), the
+  map->clamp->smooth arithmetic feeding fcw_r — ~28 ns, comfortably
+  under the 83.3 ns budget at 12 MHz.

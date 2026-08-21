@@ -1,0 +1,10 @@
+ghdl -a --std=08 --workdir=build dsm_dac.vhd dsm_dac_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/dsm_dac_tb dsm_dac_tb
+./build/dsm_dac_tb --assert-level=failure
+dsm_dac_tb.vhd:94:5:@459331500fs:(report note): R2 pass: reset clears accumulator and holds bit_out low
+dsm_dac_tb.vhd:76:7:@342040298500fs:(report note): R1 pass: sample=-128 measured_mean=0.0 expected=0.0
+dsm_dac_tb.vhd:76:7:@683622265500fs:(report note): R1 pass: sample=-64 measured_mean=2.5e-1 expected=2.5e-1
+dsm_dac_tb.vhd:76:7:@1025204232500fs:(report note): R1 pass: sample=0 measured_mean=5.0e-1 expected=5.0e-1
+dsm_dac_tb.vhd:76:7:@1366786199500fs:(report note): R1 pass: sample=64 measured_mean=7.5e-1 expected=7.5e-1
+dsm_dac_tb.vhd:76:7:@1708368166500fs:(report note): R1 pass: sample=127 measured_mean=9.9609375e-1 expected=9.9609375e-1
+dsm_dac_tb.vhd:103:5:@1708368166500fs:(report note): dsm_dac testbench complete (any FAILs are listed above)

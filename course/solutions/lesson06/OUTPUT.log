@@ -1,0 +1,8 @@
+ghdl -a --std=08 --workdir=build scale_seq.vhd scale_seq_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/scale_seq_tb scale_seq_tb
+./build/scale_seq_tb --wave=build/scale_seq_tb.ghw --assert-level=failure
+scale_seq_tb.vhd:114:5:@136207788500fs:(report note): R1 pass: correct notes in correct order, two full scales
+scale_seq_tb.vhd:115:5:@136207788500fs:(report note): R2 pass: every note held exactly 96 clocks
+scale_seq_tb.vhd:132:5:@142541096500fs:(report note): R4 pass: en='0' freezes the sequencer
+scale_seq_tb.vhd:145:5:@143791091500fs:(report note): R3 pass: reset returns to note 0 (C4)
+scale_seq_tb.vhd:147:5:@143791091500fs:(report note): scale_seq testbench complete (any FAILs are listed above)

@@ -1,0 +1,6 @@
+ghdl -a --std=08 --workdir=build reg_mux.vhd reg_mux_tb.vhd
+ghdl -e --std=08 --workdir=build -Wl,/home/clementsj/tools/glibc-isoc23-shim.o -o build/reg_mux_tb reg_mux_tb
+./build/reg_mux_tb --assert-level=failure
+reg_mux_tb.vhd:72:5:@625997500fs:(report note): R1 pass: all 8 (sel,a,b) combinations select the right input
+reg_mux_tb.vhd:93:5:@792663500fs:(report note): R2 pass: q changes only on the rising edge (1-cycle latency)
+reg_mux_tb.vhd:95:5:@792663500fs:(report note): reg_mux testbench complete: R1-R2 checked (any FAILs are listed above)
