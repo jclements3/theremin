@@ -5,3 +5,6 @@ course/work/
 *.o
 work-obj*.cf
 .claude/settings.local.json
+
+# Reference clone of github.com/fpga-theremin/theremin
+fpga-theremin/
